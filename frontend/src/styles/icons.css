@@ -1,0 +1,51 @@
+/* Override all colorful icon backgrounds to gray/black */
+.icon-container {
+  background-color: #f3f4f6 !important; /* gray-100 */
+}
+
+.icon-container svg {
+  color: #1f2937 !important; /* gray-800 */
+}
+
+/* Override all bg-*-100 classes in stats cards and icons */
+[class*="bg-blue-100"],
+[class*="bg-green-100"],
+[class*="bg-orange-100"],
+[class*="bg-red-100"],
+[class*="bg-purple-100"],
+[class*="bg-yellow-100"],
+[class*="bg-pink-100"],
+[class*="bg-indigo-100"] {
+  background-color: #f3f4f6 !important; /* gray-100 */
+}
+
+/* Override all text-*-600 classes in icons */
+[class*="text-blue-600"],
+[class*="text-green-600"],
+[class*="text-orange-600"],
+[class*="text-red-600"],
+[class*="text-purple-600"],
+[class*="text-yellow-600"],
+[class*="text-pink-600"],
+[class*="text-indigo-600"] {
+  color: #1f2937 !important; /* gray-800 */
+}
+
+/* Override status badge colors */
+[class*="bg-green-100"][class*="text-green"],
+[class*="bg-yellow-100"][class*="text-yellow"],
+[class*="bg-red-100"][class*="text-red"] {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+/* Keep green status for completed/active but make it subtle */
+.text-green-600,
+.text-green-700,
+.text-green-800 {
+  color: #1f2937 !important;
+}
+
+.bg-green-100 {
+  background-color: #f3f4f6 !important;
+}

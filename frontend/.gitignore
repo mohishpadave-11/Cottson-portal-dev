@@ -1,0 +1,12 @@
+node_modules
+dist
+.DS_Store
+*.log
+# Env files
+.env
+.env.*
+!.env.example
+.vscode
+
+*storybook.log
+storybook-static

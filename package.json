@@ -1,0 +1,19 @@
+{
+  "name": "admin-portal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "npm run build --prefix frontend",
+    "start:backend": "npm run start --prefix backend",
+    "seed": "node backend/runSeeder.js",
+    "storybook": "npm run storybook --prefix frontend"
+  },
+  "description": "Admin Portal - Full Stack Application",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
