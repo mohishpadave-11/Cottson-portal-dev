@@ -28,6 +28,7 @@ import ClientOrderDetails from './pages/ClientOrderDetails';
 import ClientOrderTimeline from './pages/ClientOrderTimeline';
 import ClientComplaints from './pages/ClientComplaints';
 import ClientNotifications from './pages/ClientNotifications';
+import AdminComplaints from './pages/AdminComplaints';
 import Logout from './pages/Logout';
 import Error from './components/Error';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -82,6 +83,7 @@ function App() {
                     <Route path="/onboarding" element={<Onboarding />} />
                     <Route path="/admins" element={<Admins />} />
                     <Route path="/admins/:id" element={<AdminDetails />} />
+                    <Route path="/complaints" element={<AdminComplaints />} />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/admin/profile" element={<AdminProfile />} />
                     <Route path="/settings" element={<Settings />} />

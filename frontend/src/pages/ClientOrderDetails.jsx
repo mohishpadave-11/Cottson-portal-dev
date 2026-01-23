@@ -466,53 +466,31 @@ const ClientOrderDetails = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Attachments</h2>
             <div className="space-y-3">
-              {order.documents && (Object.entries(order.documents).filter(([_, v]) => v && (typeof v === 'string' || (Array.isArray(v) && v.length > 0))).length > 0) ? (
-                Object.entries(order.documents).map(([key, value]) => {
-                  if (Array.isArray(value)) {
-                    return value.map((url, i) => (
-                      <a
-                        key={`${key}-${i}`}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100 hover:border-blue-200 group"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600 group-hover:bg-white transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <span className="text-sm font-semibold text-gray-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()} {value.length > 1 ? i + 1 : ''}</span>
-                        </div>
-                        <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              {order.documents && order.documents.length > 0 ? (
+                order.documents.map((doc, index) => (
+                  <a
+                    key={doc._id || index}
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100 hover:border-blue-200 group"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600 group-hover:bg-white transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                      </a>
-                    ));
-                  }
-                  return value && (
-                    <a
-                      key={key}
-                      href={value}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100 hover:border-blue-200 group"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600 group-hover:bg-white transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
                       </div>
-                      <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                  );
-                })
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700">{doc.name || 'Document'}</p>
+                        <p className="text-xs text-gray-400 capitalize">{doc.originalName === 'other' ? 'Attachment' : doc.originalName.replace(/([A-Z])/g, ' $1').trim()}</p>
+                      </div>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                ))
               ) : (
                 <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                   <p className="text-xs text-gray-500">No documents uploaded yet</p>

@@ -46,9 +46,9 @@ class AuthService {
         const firstName = nameParts[0] || '';
         const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
 
-        const firstPart = firstName.substring(0, 2);
-        const lastPart = lastName.slice(-2);
-        tempPassword = `${firstPart}${lastPart}@cottson`;
+        const firstPart = firstName.length >= 2 ? firstName.substring(0, 2) : firstName.padEnd(2, 'x');
+        const lastPart = lastName.length >= 2 ? lastName.slice(-2) : lastName.padEnd(2, 'x');
+        tempPassword = `${firstPart}${lastPart}@cottson`.toLowerCase();
       } else {
         tempPassword = this.generateRandomPassword();
       }
@@ -95,7 +95,15 @@ class AuthService {
       }
 
       // 2. Create User account (Active, with Role Client)
-      const tempPassword = this.generateRandomPassword();
+      // Format: First 2 letters of First Part + Last 2 letters of Last Part + @cottson
+      const cleanName = name || '';
+      const nameParts = cleanName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
+
+      const firstPart = firstName.length >= 2 ? firstName.substring(0, 2) : firstName.padEnd(2, 'x');
+      const lastPart = lastName.length >= 2 ? lastName.slice(-2) : lastName.padEnd(2, 'x');
+      const tempPassword = `${firstPart}${lastPart}@cottson`.toLowerCase(); // Ensure lowercase to match user expectation or keep consistent
 
       const user = await User.create({
         email,

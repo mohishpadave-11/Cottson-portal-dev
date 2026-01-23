@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
+import * as XLSX from 'xlsx';
 import Pagination from '../components/Pagination';
 import { TableLoader } from '../components/Loader';
 import companyService from '../services/companyService';
+import clientService from '../services/clientService';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 
@@ -11,6 +13,7 @@ const Companies = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const [companies, setCompanies] = useState([]);
+  const [clients, setClients] = useState([]);
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeStats, setActiveStats] = useState({ count: 0, change: 0, isPositive: true });
@@ -27,6 +30,7 @@ const Companies = () => {
 
   useEffect(() => {
     fetchCompanies();
+    fetchClients();
     fetchActiveStats();
     fetchNewStats();
     fetchTotalStats();
@@ -94,6 +98,15 @@ const Companies = () => {
     }
   };
 
+  const fetchClients = async () => {
+    try {
+      const data = await clientService.getAll();
+      setClients(data || []);
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+    }
+  };
+
   const handleDeleteClick = (company) => {
     setCompanyToDelete(company);
     setDeleteModalOpen(true);
@@ -134,19 +147,80 @@ const Companies = () => {
   const currentItems = filteredCompanies.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
 
+  const handleExport = () => {
+    try {
+      // Use filtered companies or all companies
+      const dataToExport = filteredCompanies.map(company => {
+        // Format shipping addresses
+        let shippingAddressesStr = '';
+        if (Array.isArray(company.shippingAddresses)) {
+          shippingAddressesStr = company.shippingAddresses
+            .map(addr => typeof addr === 'string' ? addr : `${addr.label}: ${addr.address}`)
+            .join('; \n');
+        } else if (company.shippingAddresses) {
+          shippingAddressesStr = String(company.shippingAddresses);
+        }
+
+        // Format Point of Contacts (Clients)
+        const companyClients = clients.filter(client =>
+          (client.companyId?._id || client.companyId) === company._id
+        );
+
+        const pocStr = companyClients.length > 0
+          ? companyClients.map(client => `${client.name} (${client.email}, ${client.phoneNumber || client.phone || client.mobile || ''})`).join('; \n')
+          : 'No contacts found';
+
+        return {
+          'Company Name': company.companyName,
+          'Trade Name': company.tradeName || '',
+          'Company ID': company.companyId || '',
+          'GST Number': company.gstNumber || '',
+          'Billing Address': company.billingAddress || '',
+          'Shipping Addresses': shippingAddressesStr,
+          'Point of Contacts': pocStr,
+          'Status': 'Active'
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Companies');
+
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(workbook, `Companies_List_${date}.xlsx`);
+
+      toast.success('Success', 'Exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Error', 'Failed to export data');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Companies</h1>
-        <button
-          onClick={handleAdd}
-          className="btn-primary text-white px-4 py-2 rounded-lg flex items-center"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Company
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleExport}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export to Excel
+          </button>
+          <button
+            onClick={handleAdd}
+            className="btn-primary text-white px-4 py-2 rounded-lg flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Company
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}

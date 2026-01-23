@@ -15,7 +15,8 @@ const Orders = () => {
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
-    companyId: ''
+    companyId: '',
+    searchQuery: ''
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -86,6 +87,16 @@ const Orders = () => {
           ? order.companyId?._id
           : order.companyId;
         return orderCompanyId === filters.companyId;
+      });
+    }
+
+    if (filters.searchQuery) {
+      const query = filters.searchQuery.toLowerCase();
+      filtered = filtered.filter(order => {
+        const orderNumber = order.orderNumber?.toString().toLowerCase() || '';
+        const companyName = order.companyId?.companyName?.toLowerCase() || '';
+        const clientName = order.clientId?.name?.toLowerCase() || '';
+        return orderNumber.includes(query) || companyName.includes(query) || clientName.includes(query);
       });
     }
 
@@ -197,7 +208,17 @@ const Orders = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <input
+              type="text"
+              placeholder="Order #, Company, Client..."
+              value={filters.searchQuery}
+              onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
             <input
@@ -272,7 +293,7 @@ const Orders = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${order.paymentStatus === 'Payment Completed' ? 'bg-green-100 text-green-800' :
+                    <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${order.paymentStatus === 'Payment Completed' ? 'bg-green-100 text-green-800' :
                       order.paymentStatus === 'Advance Payment' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
                       }`}>

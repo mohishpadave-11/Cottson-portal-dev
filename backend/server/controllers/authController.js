@@ -4,9 +4,10 @@
  */
 
 import User from "../models/User.js";
+import Client from "../models/Client.js";
 import { generateToken, verifyToken } from "../middleware/auth.js";
 import crypto from "crypto";
-import sendEmail from "../utils/sendEmail.js";
+import { sendEmail } from "../config/mailer.js";
 import {
   sendPasswordResetEmail,
   sendCredentialsEmail,
@@ -131,11 +132,15 @@ export const forgotPassword = async (req, res) => {
     `;
 
     try {
-      await sendEmail({
-        email: user.email,
-        subject: "Password Reset Request",
-        message,
-      });
+      const emailSent = await sendEmail(
+        user.email,
+        "Password Reset Request",
+        message
+      );
+
+      if (!emailSent) {
+        throw new Error("Failed to send email");
+      }
 
       res.status(200).json({
         success: true,

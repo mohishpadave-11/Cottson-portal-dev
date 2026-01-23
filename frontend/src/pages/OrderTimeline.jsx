@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../config/api';
 import Loader from '../components/Loader';
 
 const OrderTimeline = () => {
@@ -27,7 +27,7 @@ const OrderTimeline = () => {
   const fetchOrder = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/orders/${id}`);
+      const response = await api.get(`/api/orders/${id}`);
       setOrder(response.data);
     } catch (error) {
       console.error('Error fetching order:', error);

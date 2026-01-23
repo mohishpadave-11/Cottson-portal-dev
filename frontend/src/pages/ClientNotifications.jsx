@@ -67,7 +67,7 @@ const ClientNotifications = () => {
         timestamp: complaint.updatedAt || complaint.createdAt,
         complaintId: complaint._id,
         priority: complaint.priority.toLowerCase(),
-        read: complaint.status === 'Closed'
+        read: complaint.isReadByClient
       }));
 
       // Combine and sort by timestamp
@@ -97,12 +97,19 @@ const ClientNotifications = () => {
     ));
   };
 
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     markAsRead(notification.id);
 
     if (notification.type === 'order') {
       navigate(`/client/orders/${notification.orderId}`);
     } else if (notification.type === 'complaint') {
+      if (!notification.read) {
+        try {
+          await api.patch(`/api/complaints/${notification.complaintId}/mark-as-read`);
+        } catch (error) {
+          console.error('Error marking as read:', error);
+        }
+      }
       // Could navigate to complaint details if you create that page
       navigate('/client/complaints');
     }
@@ -251,8 +258,8 @@ const ClientNotifications = () => {
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'all'
-                ? 'bg-purple-100 text-purple-700'
-                : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-purple-100 text-purple-700'
+              : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
             All Notifications
@@ -260,8 +267,8 @@ const ClientNotifications = () => {
           <button
             onClick={() => setFilter('orders')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'orders'
-                ? 'bg-purple-100 text-purple-700'
-                : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-purple-100 text-purple-700'
+              : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
             Order Updates
@@ -269,8 +276,8 @@ const ClientNotifications = () => {
           <button
             onClick={() => setFilter('complaints')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'complaints'
-                ? 'bg-purple-100 text-purple-700'
-                : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-purple-100 text-purple-700'
+              : 'text-gray-600 hover:bg-gray-100'
               }`}
           >
             Complaint Responses
@@ -331,10 +338,10 @@ const ClientNotifications = () => {
 
                       {notification.status && (
                         <span className={`px-2 py-1 rounded-full font-medium ${notification.status === 'Resolved' || notification.status === 'Dispatched'
-                            ? 'bg-green-100 text-green-700'
-                            : notification.status === 'In Progress'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-gray-100 text-gray-700'
+                          ? 'bg-green-100 text-green-700'
+                          : notification.status === 'In Progress'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-700'
                           }`}>
                           {notification.status}
                         </span>

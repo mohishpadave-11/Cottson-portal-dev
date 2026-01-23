@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import api from '../config/api';
 import companyService from '../services/companyService';
 import clientService from '../services/clientService';
@@ -10,6 +11,8 @@ import OrderDocumentManager from '../components/OrderDocumentManager';
 import ManufacturingTimeline from '../components/ManufacturingTimeline';
 import AddressSelector from '../components/AddressSelector';
 import { useToast } from '../contexts/ToastContext';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -229,32 +232,57 @@ const OrderDetails = () => {
   };
 
   const uploadSingleFile = async (orderId, doc) => {
-    // 1. Get Presigned URL
-    const signResponse = await api.post(`/api/orders/${orderId}/upload-url`, {
-      fileName: doc.file.name,
-      fileType: doc.file.type,
-      docType: doc.docType
-    });
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // 1 second
 
-    const { uploadUrl, publicUrl, key } = signResponse.data;
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // 2. Upload to R2 directly
-    await axios.put(uploadUrl, doc.file, {
-      headers: {
-        'Content-Type': doc.file.type
+    let lastError;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        // 1. Get Presigned URL
+        const signResponse = await api.post(`/api/orders/${orderId}/upload-url`, {
+          fileName: doc.file.name,
+          fileType: doc.file.type,
+          docType: doc.docType
+        });
+
+        const { uploadUrl, publicUrl, key } = signResponse.data;
+
+        // 2. Upload to R2 directly
+        await axios.put(uploadUrl, doc.file, {
+          headers: {
+            'Content-Type': doc.file.type
+          }
+        });
+
+        // 3. Sync with Backend
+        await api.put(`/api/orders/${orderId}/documents`, {
+          docType: doc.docType,
+          newUrl: publicUrl,
+          newKey: key,
+          fileName: doc.file.name,
+          fileType: doc.file.type
+        });
+
+        return doc.tempId; // Success
+      } catch (error) {
+        console.error(`Upload attempt ${attempt} failed for ${doc.file.name}:`, error);
+        lastError = error;
+
+        // Don't retry if it's a client error (e.g. valid file check fail, or 403) unless it's 429
+        if (error.response && error.response.status >= 400 && error.response.status < 500 && error.response.status !== 429) {
+          throw error; // Fail immediately on client errors (like validation)
+        }
+
+        if (attempt < MAX_RETRIES) {
+          await delay(RETRY_DELAY);
+        }
       }
-    });
+    }
 
-    // 3. Sync with Backend
-    await api.put(`/api/orders/${orderId}/documents`, {
-      docType: doc.docType,
-      newUrl: publicUrl,
-      newKey: key,
-      fileName: doc.file.name,
-      fileType: doc.file.type
-    });
-
-    return doc.tempId; // Return tempId on success
+    throw lastError;
   };
 
   const processStagedUploads = async (targetOrderId) => {
@@ -267,26 +295,26 @@ const OrderDetails = () => {
     setUploadProgress({ total: stagedDocuments.length, current: 0 });
 
     // Create promises
-    const uploadPromises = stagedDocuments.map(doc =>
-      uploadSingleFile(targetOrderId, doc)
-        .then(res => ({ status: 'fulfilled', value: res, doc }))
-        .catch(err => ({ status: 'rejected', reason: err, doc }))
-    );
-
-    // Promise.all (we handle settled manually above to keep doc ref)
-    const results = await Promise.all(uploadPromises);
-
+    // Process uploads sequentially to avoid VersionError on backend
     const successfulTempIds = [];
     const failedDocs = [];
 
-    results.forEach(result => {
-      if (result.status === 'fulfilled') {
-        successfulTempIds.push(result.value);
-      } else {
-        failedDocs.push(result.doc);
-        console.error(`Failed to upload ${result.doc.file.name}:`, result.reason);
+    for (let i = 0; i < stagedDocuments.length; i++) {
+      const doc = stagedDocuments[i];
+      try {
+        const tempId = await uploadSingleFile(targetOrderId, doc);
+        successfulTempIds.push(tempId);
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+        console.error(`Failed to upload ${doc.file.name}:`, errorMessage);
+        failedDocs.push({ ...doc, error: errorMessage });
       }
-    });
+      // Update progress
+      setUploadProgress(prev => ({ ...prev, current: i + 1 }));
+    }
+
+    // Results processing is now done during the loop
+    // results variable is no longer needed
 
     // Remove successful ones
     setStagedDocuments(prev => prev.filter(d => !successfulTempIds.includes(d.tempId)));
@@ -297,7 +325,8 @@ const OrderDetails = () => {
       toast.success('All documents uploaded');
       navigate('/orders');
     } else {
-      toast.error('Upload Error', `${failedDocs.length} files failed to upload. Please retry.`);
+      const errorDetails = failedDocs.map(d => `${d.file.name}: ${d.error}`).join('\n');
+      toast.error('Upload Error', `${failedDocs.length} files failed to upload.\n${errorDetails}`);
     }
   };
 
@@ -818,9 +847,14 @@ const OrderDetails = () => {
                 <div className="flex items-center space-x-2">
                   <input
                     type="number"
+                    min="0"
                     required
                     value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val < 0) return; // Prevent negative input
+                      setFormData({ ...formData, quantity: val });
+                    }}
                     className="text-2xl font-bold text-gray-900 border-b-2 border-blue-500 focus:outline-none w-20"
                     placeholder="0"
                   />
@@ -962,30 +996,7 @@ const OrderDetails = () => {
               )}
             </div>
 
-            {/* Expected Delivery */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500 uppercase">Expected Delivery</span>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              </div>
-              {isEditing ? (
-                <input
-                  type="date"
-                  required
-                  value={formData.expectedDelivery}
-                  onChange={(e) => setFormData({ ...formData, expectedDelivery: e.target.value })}
-                  className="text-lg font-bold text-gray-900 border-b-2 border-blue-500 focus:outline-none w-full bg-transparent"
-                />
-              ) : (
-                <p className="text-2xl font-bold text-gray-900">
-                  {formData.expectedDelivery ? new Date(formData.expectedDelivery).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not Set'}
-                </p>
-              )}
-            </div>
+
 
             {/* Payment Status */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -1036,14 +1047,53 @@ const OrderDetails = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Order Date</label>
-                      <input
-                        type="date"
-                        required
-                        disabled={!isEditing}
-                        value={formData.orderDate}
-                        onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
-                      />
+                      <div className="w-full">
+                        <DatePicker
+                          selected={formData.orderDate ? new Date(formData.orderDate) : null}
+                          onChange={(date) => {
+                            if (date) {
+                              // Adjust for timezone offset to prevent date shifting
+                              const offset = date.getTimezoneOffset();
+                              const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+                              setFormData({ ...formData, orderDate: adjustedDate.toISOString().split('T')[0] });
+                            } else {
+                              setFormData({ ...formData, orderDate: '' });
+                            }
+                          }}
+                          dateFormat="MMMM d, yyyy"
+                          disabled={!isEditing}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                          placeholderText="Select order date"
+                          wrapperClassName="w-full"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Expected Delivery Date <span className="text-red-500">*</span></label>
+                      <div className="w-full">
+                        <DatePicker
+                          selected={formData.expectedDelivery ? new Date(formData.expectedDelivery) : null}
+                          onChange={(date) => {
+                            if (date) {
+                              // Adjust for timezone offset to prevent date shifting
+                              const offset = date.getTimezoneOffset();
+                              const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+                              setFormData({ ...formData, expectedDelivery: adjustedDate.toISOString().split('T')[0] });
+                            } else {
+                              setFormData({ ...formData, expectedDelivery: '' });
+                            }
+                          }}
+                          dateFormat="MMMM d, yyyy"
+                          minDate={new Date()}
+                          disabled={!isEditing}
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                          placeholderText="Select delivery date"
+                          wrapperClassName="w-full"
+                          required
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -1135,7 +1185,15 @@ const OrderDetails = () => {
                           required
                           disabled={!isEditing}
                           value={formData.productId}
-                          onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
+                          onChange={(e) => {
+                            const selectedProductId = e.target.value;
+                            const selectedProduct = products.find(p => p._id === selectedProductId);
+                            setFormData({
+                              ...formData,
+                              productId: selectedProductId,
+                              price: selectedProduct ? selectedProduct.basePrice : formData.price
+                            });
+                          }}
                           className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 appearance-none cursor-pointer bg-white"
                         >
                           <option value="">Select Product</option>
@@ -1301,9 +1359,23 @@ const OrderDetails = () => {
                           <span className="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
                           <input
                             type="number"
-                            value={formData.amountPaid}
+                            value={formData.amountPaid === 0 ? '' : formData.amountPaid}
                             onChange={(e) => {
-                              let amount = parseFloat(e.target.value) || 0;
+                              const val = e.target.value;
+
+                              // If empty, set to 0 or empty string in state, but display empty
+                              if (val === '') {
+                                setFormData({
+                                  ...formData,
+                                  amountPaid: 0,
+                                  advancePercentage: 0
+                                });
+                                return;
+                              }
+
+                              let amount = parseFloat(val);
+                              if (isNaN(amount)) amount = 0;
+
                               const price = parseFloat(formData.priceWithGst) || 0;
 
                               if (price > 0 && amount > price) {

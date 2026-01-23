@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import Loader from '../components/Loader';
 import ConfirmationModal from '../components/ConfirmationModal';
 import StatusBadge from '../components/ui/StatusBadge/StatusBadge';
+import Pagination from '../components/Pagination';
 
 const Products = () => {
     const toast = useToast();
@@ -12,6 +13,8 @@ const Products = () => {
     const [selectedCollection, setSelectedCollection] = useState(null);
     const [collections, setCollections] = useState([]);
     const [products, setProducts] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     const [loading, setLoading] = useState(true);
     const [isEditingProduct, setIsEditingProduct] = useState(false);
     const [selectedProductId, setSelectedProductId] = useState(null);
@@ -158,7 +161,14 @@ const Products = () => {
     const handleViewCollection = (collection) => {
         setSelectedCollection(collection);
         setView('products');
+        setCurrentPage(1);
     };
+
+    // Pagination Logic
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(products.length / itemsPerPage);
 
 
 
@@ -259,7 +269,7 @@ const Products = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {products.map(product => (
+                                {currentProducts.map(product => (
                                     <tr key={product._id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-gray-900">{product.name}</div>
@@ -307,6 +317,13 @@ const Products = () => {
                             </tbody>
                         </table>
                     </div>
+                    {products.length > itemsPerPage && (
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    )}
                 </div>
             )}
 

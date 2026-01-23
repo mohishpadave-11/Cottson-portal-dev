@@ -2,6 +2,7 @@ import express from 'express';
 import authService from '../services/authService.js';
 import { protect, isSuperAdmin, isAdminOrSuperAdmin } from '../middleware/auth.js';
 import User from '../models/User.js';
+import Client from '../models/Client.js';
 
 const router = express.Router();
 
@@ -306,9 +307,12 @@ router.delete('/delete-user/:userId', protect, isSuperAdmin, async (req, res) =>
 
     await User.findByIdAndDelete(userId);
 
+    // Also delete associated Client profile if it exists
+    await Client.findOneAndDelete({ userId: userId });
+
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User and associated client profile deleted successfully'
     });
   } catch (error) {
     res.status(500).json({

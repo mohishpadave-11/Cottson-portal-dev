@@ -355,7 +355,7 @@
 import User from "../models/User.js";
 import Company from "../models/Company.js";
 import Client from "../models/Client.js";
-import sendEmail from "../utils/sendEmail.js";
+import { sendEmail } from "../config/mailer.js";
 import crypto from "crypto";
 
 // =====================================================
@@ -535,11 +535,11 @@ export const createUserAccount = async (req, res) => {
     `;
 
     try {
-      await sendEmail({
+      await sendEmail(
         email,
-        subject: `Your ${roleLabel} Account Has Been Created`,
-        message,
-      });
+        `Your ${roleLabel} Account Has Been Created`,
+        message
+      );
     } catch (emailError) {
       console.error("Email sending error:", emailError);
       // Don't fail the account creation if email fails
@@ -739,11 +739,11 @@ export const resetUserPassword = async (req, res) => {
     `;
 
     try {
-      await sendEmail({
-        email: user.email,
-        subject: "Your Password Has Been Reset",
-        message,
-      });
+      await sendEmail(
+        user.email,
+        "Your Password Has Been Reset",
+        message
+      );
     } catch (emailError) {
       console.error("Email sending error:", emailError);
     }

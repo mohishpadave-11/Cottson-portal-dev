@@ -64,7 +64,6 @@ const ClientOrderTimeline = () => {
   ];
 
   // Calculate target index once order is loaded
-  // Calculate target index once order is loaded
   const currentStageIndex = order ? TIMELINE_STEPS.findIndex(s => s.enumParams.includes(order.timeline)) : -1;
 
   useEffect(() => {
@@ -92,9 +91,6 @@ const ClientOrderTimeline = () => {
     };
   }, [order, currentStageIndex]);
 
-  // Wait, the inner interval cleanup is tricky in the above replacement block. 
-  // Let's rewrite the replacement to be implementation safe.
-
   const getStepStatus = (step, index) => {
     // Determine status based on animation state
     if (index <= visibleIndex) {
@@ -118,6 +114,23 @@ const ClientOrderTimeline = () => {
     }
     return '';
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader size="large" text="Loading order details..." />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Order not found</p>
+        <button onClick={() => navigate('/client/orders')} className="mt-4 text-blue-600 hover:underline">Back to Orders</button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
