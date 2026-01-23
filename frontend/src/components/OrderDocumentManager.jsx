@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import axios from 'axios';
 import api from '../config/api';
@@ -32,6 +33,14 @@ const OrderDocumentManager = ({
     const handleFileSelect = async (e, docType, slotId = null) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Validation for file type
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Invalid File Type', 'Please upload only .pdf, .jpeg, .jpg, or .png files.');
+            e.target.value = ''; // Reset input
+            return;
+        }
 
         // Reset input
         e.target.value = '';
@@ -288,7 +297,7 @@ const OrderDocumentManager = ({
                                     <input
                                         type="file"
                                         className="hidden"
-                                        accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                                        accept=".pdf,.jpg,.jpeg,.png"
                                         onChange={(e) => handleFileSelect(e, 'other', 'other-new')}
                                     />
                                 </>

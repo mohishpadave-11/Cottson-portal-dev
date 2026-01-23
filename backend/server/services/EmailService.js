@@ -1,7 +1,9 @@
 import transporter, { sendEmail } from "../config/mailer.js";
+import { EmailTemplates } from "../templates/emailTemplate.js";
 
 /**
  * Email Service for specific business logic emails
+ * Uses branded email templates with Cottson styling
  */
 const EmailService = {
   /**
@@ -15,37 +17,110 @@ const EmailService = {
   sendDocumentNotification: async (clientEmail, clientName, docType, orderNumber, docUrl) => {
     try {
       const subject = `New Document Available: ${docType} for Order #${orderNumber}`;
-      const docLabel = docType.replace(/([A-Z])/g, ' $1').trim(); // e.g. "proformaInvoice" -> "proforma Invoice"
+      const html = EmailTemplates.documentNotification(clientName, docType, orderNumber, docUrl);
 
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h2 style="color: #2c3e50;">New Document Uploaded</h2>
-          <p>Hello ${clientName},</p>
-          <p>A new document (<strong>${docLabel}</strong>) has been uploaded for your Order <strong>#${orderNumber}</strong>.</p>
-          
-          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 4px; margin: 20px 0;">
-             <p style="margin: 0;"><strong>Document Type:</strong> ${docLabel}</p>
-             <p style="margin: 5px 0 0;"><strong>Order Number:</strong> #${orderNumber}</p>
-          </div>
-
-          <p>Please log in to your portal to view or download the document.</p>
-
-          ${docUrl ? `
-          <p style="text-align: center; margin-top: 30px;">
-            <a href="${docUrl}" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
-              View Document
-            </a>
-          </p>
-          ` : ''}
-          
-          <hr style="border: 1px solid #eee; margin-top: 30px;" />
-          <p style="color: #7f8c8d; font-size: 12px; text-align: center;">Cotton Portal Notifications</p>
-        </div>
-      `;
-
-      // Use the generic sendEmail function from config/mailer or transporter directly
-      // Assuming sendEmail helper handles basic error logging.
       await sendEmail(clientEmail, subject, html);
+      return true;
+    } catch (error) {
+      console.error("EmailService Error:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Send Order Status Update to Client
+   * @param {string} clientEmail - Client's email address
+   * @param {string} clientName - Client's name
+   * @param {string} orderNumber - Order reference number
+   * @param {string} status - New order status
+   * @param {string} message - Optional additional message
+   */
+  sendOrderStatusUpdate: async (clientEmail, clientName, orderNumber, status, message) => {
+    try {
+      const subject = `Order Update: #${orderNumber} - ${status}`;
+      const html = EmailTemplates.orderStatusUpdate(clientName, orderNumber, status, message);
+
+      await sendEmail(clientEmail, subject, html);
+      return true;
+    } catch (error) {
+      console.error("EmailService Error:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Send Welcome Email to New Client
+   * @param {string} clientEmail - Client's email address
+   * @param {string} clientName - Client's name
+   * @param {string} loginUrl - Optional custom login URL
+   */
+  sendWelcomeEmail: async (clientEmail, clientName, loginUrl) => {
+    try {
+      const subject = "Welcome to Cottson Clothing";
+      const html = EmailTemplates.welcome(clientName, loginUrl);
+
+      await sendEmail(clientEmail, subject, html);
+      return true;
+    } catch (error) {
+      console.error("EmailService Error:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Send Password Reset Email
+   * @param {string} userEmail - User's email address
+   * @param {string} userName - User's name
+   * @param {string} resetUrl - Password reset URL with token
+   */
+  sendPasswordResetEmail: async (userEmail, userName, resetUrl) => {
+    try {
+      const subject = "Password Reset Request - Cottson Clothing";
+      const html = EmailTemplates.passwordReset(userName, resetUrl);
+
+      await sendEmail(userEmail, subject, html);
+      return true;
+    } catch (error) {
+      console.error("EmailService Error:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Send Generic Notification Email
+   * @param {string} userEmail - User's email address
+   * @param {string} userName - User's name
+   * @param {string} title - Email title
+   * @param {string} message - Email message (can include HTML)
+   * @param {string} actionUrl - Optional action button URL
+   * @param {string} actionText - Optional action button text
+   */
+  sendNotification: async (userEmail, userName, title, message, actionUrl, actionText) => {
+    try {
+      const subject = title;
+      const html = EmailTemplates.notification(userName, title, message, actionUrl, actionText);
+
+      await sendEmail(userEmail, subject, html);
+      return true;
+    } catch (error) {
+      console.error("EmailService Error:", error);
+      return false;
+    }
+  },
+
+  /**
+   * Send Admin Welcome Email with Credentials
+   * @param {string} email - Admin email
+   * @param {string} name - Admin name
+   * @param {string} password - Generated password
+   */
+  sendAdminWelcome: async (email, name, password) => {
+    try {
+      const subject = "Welcome to Cottson Admin Portal";
+      const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+      const html = EmailTemplates.adminWelcome(name, email, password, loginUrl);
+
+      await sendEmail(email, subject, html);
       return true;
     } catch (error) {
       console.error("EmailService Error:", error);

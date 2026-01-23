@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import KanbanBoard from '../components/KanbanBoard';
 import Loader, { CardLoader } from '../components/Loader';

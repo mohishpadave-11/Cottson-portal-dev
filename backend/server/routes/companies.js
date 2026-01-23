@@ -10,6 +10,7 @@ import {
   createCompany,
   updateCompany,
   deleteCompany,
+  getNextCompanyId,
 } from "../controllers/companyController.js";
 import { protect as authenticate, authorize } from "../middleware/auth.js";
 
@@ -17,6 +18,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getCompanies);
+router.get("/next-id", authenticate, getNextCompanyId);
 router.get("/:id", getCompanyById);
 
 // Protected routes (require authentication)

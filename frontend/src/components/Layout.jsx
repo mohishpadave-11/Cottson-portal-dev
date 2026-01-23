@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../config/api';
@@ -43,8 +44,11 @@ const Layout = ({ children }) => {
   const fetchUnreadCount = async () => {
     try {
       const response = await api.get('/api/complaints');
-      // Count complaints not read by admin
-      const unread = response?.data?.filter(c => !c.isReadByAdmin).length || 0;
+      // Count complaints not read by admin AND still active
+      const unread = response?.data?.filter(c =>
+        !c.isReadByAdmin &&
+        (c.status === 'Open' || c.status === 'In Progress')
+      ).length || 0;
       setUnreadCount(unread);
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -185,7 +189,7 @@ const Layout = ({ children }) => {
           ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}
           fixed lg:static inset-y-0 left-0 z-50
           w-64
-          bg-gradient-to-b from-[#0f172a] to-[#1e293b] 
+          bg-[#0d3858] 
           flex flex-col shadow-xl 
           transition-all duration-500 ease-in-out
         `}
@@ -193,7 +197,7 @@ const Layout = ({ children }) => {
         onMouseLeave={() => !mobileMenuOpen && setSidebarCollapsed(true)}
       >
         {/* Logo Section */}
-        <div className="p-6 border-b border-slate-700">
+        <div className="p-4 border-b border-slate-700">
           <div className="lg:hidden absolute top-4 right-4">
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -207,16 +211,20 @@ const Layout = ({ children }) => {
 
           {(sidebarCollapsed && !mobileMenuOpen) ? (
             <div className="flex items-center justify-center">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-[#0f172a]">C</span>
+              <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+                <img
+                  src="/favicondark.jpeg"
+                  alt="Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center bg-white rounded-lg p-3">
+            <div className="flex items-center justify-center">
               <img
-                src="/logo (1).png"
+                src="/trans.png"
                 alt="TextileAdmin Logo"
-                className="h-12 w-auto object-contain"
+                className="h-32 w-auto max-w-full object-contain"
               />
             </div>
           )}
@@ -280,9 +288,12 @@ const Layout = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
+      <div className="flex-1 flex flex-col overflow-y-auto w-full lg:w-auto">
         {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
+        <header
+          className="glass-header sticky top-0 z-30 px-4 sm:px-6 lg:px-8 py-4"
+          style={{ backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)' }}
+        >
           <div className="flex items-center justify-between">
             {/* Mobile Menu Button */}
             <button
@@ -368,7 +379,7 @@ const Layout = ({ children }) => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 bg-gray-50 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
 

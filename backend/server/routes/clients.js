@@ -83,16 +83,41 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete client
+// Delete client (and associated user account)
 router.delete('/:id', async (req, res) => {
   try {
-    const client = await Client.findByIdAndDelete(req.params.id);
+    // First, find the client to get the userId
+    const client = await Client.findById(req.params.id);
 
     if (!client) {
       return res.status(404).json({ message: 'Client not found' });
     }
 
-    res.json({ message: 'Client deleted successfully' });
+    // Delete the client profile
+    await Client.findByIdAndDelete(req.params.id);
+
+    // Also delete the associated user account if it exists
+    if (client.userId) {
+      try {
+        await User.findByIdAndDelete(client.userId);
+        console.log(`Deleted associated user account: ${client.userId}`);
+      } catch (userError) {
+        console.error('Error deleting associated user:', userError);
+        // Continue even if user deletion fails (user might not exist)
+      }
+    } else if (client.email) {
+      // Fallback: Try to find and delete user by email if userId not set
+      try {
+        await User.findOneAndDelete({ email: client.email });
+        console.log(`Deleted user by email: ${client.email}`);
+      } catch (emailError) {
+        console.error('Error deleting user by email:', emailError);
+      }
+    }
+
+    res.json({
+      message: 'Client and associated user account deleted successfully'
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

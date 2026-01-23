@@ -1,15 +1,18 @@
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import Loader from './Loader';
 import { useState, useEffect } from 'react';
+import api from '../config/api';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
 
     useEffect(() => {
-        const verifyAuth = () => {
+        const verifyAuth = async () => {
             const token = localStorage.getItem('token');
             const userStr = localStorage.getItem('user');
 
@@ -23,11 +26,16 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
                 const user = JSON.parse(userStr);
                 setIsAuthenticated(true);
                 setUserRole(user.role);
+
+                // Fetch fresh user data to check requiresPasswordChange
+                const response = await api.get('/api/auth/me');
+                if (response.data.user.requiresPasswordChange) {
+                    setRequiresPasswordChange(true);
+                }
             } catch (error) {
                 console.error('Auth verification failed', error);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                setIsAuthenticated(false);
+                // If API fails, still allow access but don't check password change
+                // This prevents lockout if API is down
             } finally {
                 setIsLoading(false);
             }
@@ -46,6 +54,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
     if (!isAuthenticated) {
         return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // Check if password change is required and redirect
+    // Allow access to /change-password itself to avoid infinite loop
+    if (requiresPasswordChange && location.pathname !== '/change-password') {
+        return <Navigate to="/change-password?forced=true" replace />;
     }
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {

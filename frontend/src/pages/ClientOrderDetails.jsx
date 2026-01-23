@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -380,11 +381,11 @@ const ClientOrderDetails = () => {
               </h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead>
+                  <thead className="bg-[#0d3858] text-white">
                     <tr>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-500 uppercase tracking-tight">Date</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-500 uppercase tracking-tight">Type</th>
-                      <th className="px-4 py-3 text-right font-semibold text-gray-500 uppercase tracking-tight">Amount</th>
+                      <th className="px-4 py-3 text-left font-semibold uppercase tracking-tight">Date</th>
+                      <th className="px-4 py-3 text-left font-semibold uppercase tracking-tight">Type</th>
+                      <th className="px-4 py-3 text-right font-semibold uppercase tracking-tight">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">

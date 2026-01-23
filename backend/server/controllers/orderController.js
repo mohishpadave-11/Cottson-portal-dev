@@ -19,7 +19,15 @@ import EmailService from "../services/EmailService.js";
 // Get next order number for UI
 export const getNextOrderNumber = async (req, res) => {
   try {
-    const orderNumber = await Order.generateOrderNumber();
+    const { companyId } = req.query;
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "companyId is required to generate next order number",
+      });
+    }
+
+    const { orderNumber } = await Order.generateOrderNumber(companyId);
     res.status(200).json({
       success: true,
       data: orderNumber,
@@ -181,9 +189,16 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Generate order number if not provided
+    // Generate order number and sequence if not provided
     if (!req.body.orderNumber) {
-      req.body.orderNumber = await Order.generateOrderNumber();
+      const { orderNumber, sequence } = await Order.generateOrderNumber(companyId);
+      req.body.orderNumber = orderNumber;
+      req.body.sequence = sequence;
+    } else if (!req.body.sequence) {
+      // If orderNumber is provided manually (unlikely but possible), try to extract sequence or default to 0
+      // For now, let's assume we always want the system to handle it if missing
+      const { sequence } = await Order.generateOrderNumber(companyId);
+      req.body.sequence = sequence;
     }
 
     // Calculate price with GST (Detailed Formula)

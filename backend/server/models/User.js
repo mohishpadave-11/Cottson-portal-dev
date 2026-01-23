@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
     // Password reset
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    requiresPasswordChange: {
+      type: Boolean,
+      default: false,
+    },
 
     // Fields for admin/manager role
     name: {

@@ -1,3 +1,4 @@
+import React from 'react';
 import CompanyAddressManager from './CompanyAddressManager';
 
 const CompanyModal = ({ company, onClose, onSave }) => {
@@ -19,6 +20,26 @@ const CompanyModal = ({ company, onClose, onSave }) => {
       });
     }
   }, [company]);
+
+  useEffect(() => {
+    if (!company && formData.companyName) {
+      const timer = setTimeout(() => {
+        fetchNextId(formData.companyName);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.companyName, company]);
+
+  const fetchNextId = async (name) => {
+    try {
+      const response = await api.get(`/api/companies/next-id?name=${encodeURIComponent(name)}`);
+      if (response.data.success) {
+        setFormData(prev => ({ ...prev, companyId: response.data.nextId }));
+      }
+    } catch (error) {
+      console.error('Error fetching next ID:', error);
+    }
+  };
   // ... existing code ...
 
 
@@ -97,9 +118,14 @@ const CompanyModal = ({ company, onClose, onSave }) => {
                     required
                     disabled={saving}
                     value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                        setFormData({ ...formData, companyName: val });
+                      }
+                    }}
                     placeholder="Enter company name"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                   />
                 </div>
 
@@ -112,9 +138,14 @@ const CompanyModal = ({ company, onClose, onSave }) => {
                     required
                     disabled={saving}
                     value={formData.tradeName}
-                    onChange={(e) => setFormData({ ...formData, tradeName: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                        setFormData({ ...formData, tradeName: val });
+                      }
+                    }}
                     placeholder="Enter trade name"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                   />
                 </div>
 
@@ -129,7 +160,7 @@ const CompanyModal = ({ company, onClose, onSave }) => {
                     value={formData.gstNumber}
                     onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
                     placeholder="e.g., 22AAAAA0000A1Z5"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                   />
                 </div>
 
@@ -141,10 +172,10 @@ const CompanyModal = ({ company, onClose, onSave }) => {
                     type="text"
                     required
                     disabled={saving}
+                    readOnly
                     value={formData.companyId}
-                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                    placeholder="Enter unique company ID"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                    placeholder="Generating ID..."
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none bg-gray-100 text-gray-500 cursor-not-allowed"
                   />
                 </div>
 
@@ -158,7 +189,7 @@ const CompanyModal = ({ company, onClose, onSave }) => {
                     value={formData.billingAddress}
                     onChange={(e) => setFormData({ ...formData, billingAddress: e.target.value })}
                     placeholder="Enter complete billing address"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 resize-none"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 resize-none"
                     rows="3"
                   />
                 </div>

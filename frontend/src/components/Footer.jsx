@@ -1,3 +1,5 @@
+import React from 'react';
+
 const Footer = ({ variant = 'admin' }) => {
   const linkColor = variant === 'admin' ? 'text-blue-600 hover:text-blue-700' : 'text-purple-600 hover:text-purple-700';
 
@@ -7,7 +9,7 @@ const Footer = ({ variant = 'admin' }) => {
         <p className="text-sm text-gray-600">
           CRM made and hosted by{' '}
           <a
-            href="https://datacircles.com"
+            href="https://datacircles.in"
             target="_blank"
             rel="noopener noreferrer"
             className={`font-semibold ${linkColor} transition-colors`}

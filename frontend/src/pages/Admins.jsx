@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -19,9 +20,7 @@ const Admins = () => {
     const [adminToDelete, setAdminToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const [resetModalOpen, setResetModalOpen] = useState(false);
-    const [adminToReset, setAdminToReset] = useState(null);
-    const [isResetting, setIsResetting] = useState(false);
+
 
     // Fetch Admins
     useEffect(() => {
@@ -63,27 +62,7 @@ const Admins = () => {
         }
     };
 
-    // Reset Password Handlers
-    const handleResetClick = (admin) => {
-        setAdminToReset(admin);
-        setResetModalOpen(true);
-    };
 
-    const handleConfirmReset = async () => {
-        if (!adminToReset) return;
-
-        try {
-            setIsResetting(true);
-            await api.post(`/api/auth/reset-user-password/${adminToReset._id}`, {});
-            toast.success('Success', 'New credentials sent to admin');
-            setResetModalOpen(false);
-            setAdminToReset(null);
-        } catch (error) {
-            toast.error('Error', 'Failed to reset password');
-        } finally {
-            setIsResetting(false);
-        }
-    };
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -112,12 +91,12 @@ const Admins = () => {
                     <>
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50">
+                                <thead className="bg-[#0d3858] text-white">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase">Name</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase">Email</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
@@ -142,16 +121,7 @@ const Admins = () => {
                                                         </svg>
                                                         <span>View</span>
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleResetClick(admin)}
-                                                        className="text-orange-600 hover:text-orange-900 flex items-center space-x-1"
-                                                        title="Reset Password"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11.536 16l-.707.707-.707.707H8.536v-1.536l-.707-.707-.707-.707.707-.707L9.293 12.293a6 6 0 010-8.486 6 6 0 018.486 0zM17 19a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                        </svg>
-                                                        <span>Reset</span>
-                                                    </button>
+
                                                     <button
                                                         onClick={() => handleDeleteClick(admin)}
                                                         className="text-red-600 hover:text-red-900 flex items-center space-x-1"
@@ -196,17 +166,7 @@ const Admins = () => {
                 variant="danger"
             />
 
-            {/* Reset Password Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={resetModalOpen}
-                onClose={() => setResetModalOpen(false)}
-                onConfirm={handleConfirmReset}
-                title="Reset Password"
-                message={`Are you sure you want to reset the password for ${adminToReset?.name || 'this admin'}? They will receive an email with new credentials.`}
-                confirmText="Reset Password"
-                isLoading={isResetting}
-                variant="warning"
-            />
+
         </div>
     );
 };

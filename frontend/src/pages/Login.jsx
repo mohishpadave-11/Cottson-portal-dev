@@ -1,8 +1,9 @@
+import React from 'react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../config/api';
 
-const Login = () => {
+const Login = ({ role }) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
@@ -11,6 +12,18 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    const getPortalName = () => {
+        if (role === 'superadmin') return 'Superadmin Portal';
+        if (role === 'admin') return 'Admin Portal';
+        return 'Portal';
+    };
+
+    const getAccessText = () => {
+        if (role === 'superadmin') return 'Please enter your credentials to access the superadmin portal';
+        if (role === 'admin') return 'Please enter your credentials to access the admin portal';
+        return 'Please enter your credentials to access the portal';
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -25,6 +38,12 @@ const Login = () => {
             // Store info
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
+
+            // Check if password change is required (first-time login)
+            if (user.requiresPasswordChange) {
+                navigate('/change-password?forced=true');
+                return;
+            }
 
             // Redirect based on role
             if (user.role === 'client') {
@@ -42,9 +61,10 @@ const Login = () => {
     return (
         <div className="min-h-screen flex selection:bg-blue-100 selection:text-blue-900 overflow-hidden bg-white">
             {/* Left Side - Image & Branding */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900 text-white flex-col justify-end p-12 lg:p-16 overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 relative bg-[#0f172a] text-white flex-col justify-end p-12 lg:p-16 overflow-hidden">
                 <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+                    <img src="/login.JPG" alt="Background" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-[#0d3858] opacity-90"></div>
                 </div>
 
                 <div className="relative z-10 w-full max-w-lg">
@@ -56,7 +76,7 @@ const Login = () => {
                     </h1>
 
                     <p className="text-lg text-gray-300 font-light leading-relaxed mb-12">
-                        Providing the world's finest fashion houses with sustainable, premium manufacturing solutions for over three decades.
+                        Sign in to workwear crafted for comfort and built for performance.
                     </p>
                 </div>
             </div>
@@ -68,22 +88,18 @@ const Login = () => {
                 <div className="w-full max-w-md space-y-8">
                     {/* Header */}
                     <div className="space-y-6">
-                        <div className="flex items-center space-x-3 mb-8">
-                            {/* Simple Logo Icon */}
-                            <div className="text-blue-900">
-                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" className="opacity-0" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12a7.5 7.5 0 0015 0 7.5 7.5 0 00-15 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                            </div>
-                            <span className="text-2xl font-bold tracking-widest text-gray-900">COTTSON</span>
+                        <div className="flex items-center justify-center mb-8">
+                            <img
+                                src="/logo.png"
+                                alt="Cottson Logo"
+                                className="h-16 w-auto object-contain"
+                            />
                         </div>
 
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Portal</h2>
+                            <h2 className="text-2xl font-bold text-gray-900">{getPortalName()}</h2>
                             <p className="mt-2 text-sm text-gray-500">
-                                Please enter your credentials to access the manufacturing dashboard.
+                                {getAccessText()}
                             </p>
                         </div>
                     </div>
@@ -102,21 +118,21 @@ const Login = () => {
                         <div className="space-y-5">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Institutional Email
+                                    Email
                                 </label>
                                 <input
                                     type="email"
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="block w-full px-4 py-3 text-gray-900 border border-gray-200 rounded-lg placeholder-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors bg-white hover:border-gray-300"
+                                    className="block w-full px-4 py-3 text-gray-900 border border-gray-200 rounded-lg placeholder-gray-300 focus:outline-none focus:border-[#0d3858] focus:ring-1 focus:ring-[#0d3858] transition-colors bg-white hover:border-gray-300"
                                     placeholder="name@cottson.com"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Security Password
+                                    Password
                                 </label>
                                 <div className="relative">
                                     <input
@@ -124,7 +140,7 @@ const Login = () => {
                                         required
                                         value={formData.password}
                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        className="block w-full px-4 py-3 text-gray-900 border border-gray-200 rounded-lg placeholder-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors bg-white hover:border-gray-300 tracking-widest pr-12"
+                                        className="block w-full px-4 py-3 text-gray-900 border border-gray-200 rounded-lg placeholder-gray-300 focus:outline-none focus:border-[#0d3858] focus:ring-1 focus:ring-[#0d3858] transition-colors bg-white hover:border-gray-300 tracking-widest pr-12"
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -162,7 +178,7 @@ const Login = () => {
                             </div>
 
                             <div className="text-sm">
-                                <Link to="/forgot-password" className="font-semibold text-blue-800 hover:text-blue-900 transition-colors">
+                                <Link to="/forgot-password?from=admin" className="font-semibold text-[#0d3858] hover:text-[#0a2c46] transition-colors">
                                     Reset Password
                                 </Link>
                             </div>
@@ -171,7 +187,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#0d3858] hover:bg-[#0a2c46] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0d3858] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -182,12 +198,10 @@ const Login = () => {
                         </button>
                     </form>
 
-                    {/* Footer */}
                     <div className="pt-8 mt-8 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 font-medium uppercase tracking-wider">
-                        <p>&copy; 2026 Cottson Group</p>
+                        <p>@ 2026 Cottson Clothing</p>
                         <div className="space-x-4">
-                            <a href="#" className="hover:text-gray-600">Help</a>
-                            <a href="#" className="hover:text-gray-600">Privacy</a>
+                            <a href="mailto:contact@cottson.com" className="hover:text-gray-600">Contact Us</a>
                         </div>
                     </div>
                 </div>

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -160,81 +161,96 @@ const Clients = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b">
-          <input
-            type="text"
-            placeholder="Search clients..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      {/* Search Card */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <input
+          type="text"
+          placeholder="Search by name, email, or phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-3 border border-gray-100 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all"
+        />
+      </div>
 
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="w-full text-left">
+            <thead className="bg-[#0d3858] text-white border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Name</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Email</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Phone Number</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Company</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 bg-white">
               {currentItems.map(client => (
-                <tr key={client._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{client.name}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{client.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{client.phoneNumber}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{client.companyName}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center space-x-3">
+                <tr key={client._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-600">{client.email}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-600 font-mono">{client.phoneNumber}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-600">{client.companyName}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <button
                         onClick={() => handleEdit(client)}
-                        className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-                        title="View Client"
+                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span>View</span>
+                        <span className="hidden sm:inline">View</span>
                       </button>
                       <button
                         onClick={() => handleResetClick(client)}
-                        className="text-orange-600 hover:text-orange-800 flex items-center space-x-1"
-                        title="Reset Password"
+                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors text-sm font-medium"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11.536 16l-.707.707-.707.707H8.536v-1.536l-.707-.707-.707-.707.707-.707L9.293 12.293a6 6 0 010-8.486 6 6 0 018.486 0zM17 19a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        <span>Reset</span>
+                        <span className="hidden sm:inline">Reset</span>
                       </button>
                       <button
                         onClick={() => handleDeleteClick(client)}
-                        className="text-red-600 hover:text-red-800 flex items-center space-x-1"
-                        title="Delete Client"
+                        className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        <span>Delete</span>
+                        <span className="hidden sm:inline">Delete</span>
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {currentItems.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                    No clients found matching your search.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        <div className="bg-white px-6 py-4 border-t border-gray-100">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
 
       <ConfirmationModal

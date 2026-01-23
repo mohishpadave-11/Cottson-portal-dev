@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './contexts/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -21,8 +22,10 @@ import AdminProfile from './pages/AdminProfile';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import Login from './pages/Login';
+import ClientLogin from './pages/ClientLogin';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ChangePassword from './pages/ChangePassword';
 import ClientOrders from './pages/ClientOrders';
 import ClientOrderDetails from './pages/ClientOrderDetails';
 import ClientOrderTimeline from './pages/ClientOrderTimeline';
@@ -41,8 +44,12 @@ function App() {
           <Routes>
             {/* Public Authentication Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/admin/login" element={<Login role="admin" />} />
+            <Route path="/superadmin/login" element={<Login role="superadmin" />} />
+            <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/change-password" element={<ChangePassword />} />
 
             {/* Logout Route - Standalone */}
             <Route path="/logout" element={<Logout />} />

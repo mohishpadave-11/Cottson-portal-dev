@@ -148,7 +148,8 @@ router.get('/me', protect, async (req, res) => {
         companyId: user.companyId,
         companyName: user.companyId?.companyName,
         status: user.status,
-        lastLogin: user.lastLogin
+        lastLogin: user.lastLogin,
+        requiresPasswordChange: user.requiresPasswordChange || false
       }
     });
   } catch (error) {
@@ -193,6 +194,10 @@ router.post('/change-password', protect, async (req, res) => {
 
     // Update password
     user.password = newPassword;
+
+    // Clear the flag since user has now set their own password
+    user.requiresPasswordChange = false;
+
     await user.save();
 
     res.json({

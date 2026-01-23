@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../config/api';
@@ -58,6 +59,26 @@ const Onboarding = () => {
         phoneNumber: ''
     });
 
+    const fetchNextCompanyId = async (name) => {
+        try {
+            const response = await api.get(`/api/companies/next-id?name=${encodeURIComponent(name)}`);
+            if (response.data.success) {
+                setCompanyForm(prev => ({ ...prev, companyId: response.data.nextId }));
+            }
+        } catch (error) {
+            console.error('Failed to fetch next company ID');
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'company' && companyForm.companyName) {
+            const timer = setTimeout(() => {
+                fetchNextCompanyId(companyForm.companyName);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [activeTab, companyForm.companyName]);
+
     const handleCompanySubmit = async (e) => {
         e.preventDefault();
 
@@ -95,6 +116,13 @@ const Onboarding = () => {
 
     const handleClientSubmit = async (e) => {
         e.preventDefault();
+
+        // Validate phone number length
+        if (clientForm.phoneNumber.length !== 10) {
+            toast.error('Error', 'Phone number must be exactly 10 digits');
+            return;
+        }
+
         setLoading(true);
         try {
             // Use api instance which handles base URL and auth tokens
@@ -110,6 +138,13 @@ const Onboarding = () => {
 
     const handleAdminSubmit = async (e) => {
         e.preventDefault();
+
+        // Validate phone number length
+        if (adminForm.phoneNumber.length !== 10) {
+            toast.error('Error', 'Phone number must be exactly 10 digits');
+            return;
+        }
+
         setLoading(true);
         try {
             // Use api instance which handles base URL and auth tokens
@@ -185,8 +220,13 @@ const Onboarding = () => {
                                     required
                                     type="text"
                                     value={companyForm.companyName}
-                                    onChange={e => setCompanyForm({ ...companyForm, companyName: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none"
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                                            setCompanyForm({ ...companyForm, companyName: val });
+                                        }
+                                    }}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all outline-none"
                                     placeholder="e.g. Acme Corp"
                                 />
                             </div>
@@ -199,8 +239,13 @@ const Onboarding = () => {
                                         required
                                         type="text"
                                         value={companyForm.tradeName}
-                                        onChange={e => setCompanyForm({ ...companyForm, tradeName: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none"
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                                                setCompanyForm({ ...companyForm, tradeName: val });
+                                            }
+                                        }}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all outline-none"
                                         placeholder="Official Business Name"
                                     />
                                 </div>
@@ -211,7 +256,7 @@ const Onboarding = () => {
                                         type="text"
                                         value={companyForm.gstNumber}
                                         onChange={e => setCompanyForm({ ...companyForm, gstNumber: e.target.value.toUpperCase() })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all outline-none"
                                         placeholder="22AAAAA0000A1Z5"
                                     />
                                     <p className="text-[10px] text-blue-400 mt-1 uppercase font-medium tracking-wide">Format: 22AAAAA0000A1Z5</p>
@@ -226,7 +271,7 @@ const Onboarding = () => {
                                     rows="3"
                                     value={companyForm.billingAddress}
                                     onChange={e => setCompanyForm({ ...companyForm, billingAddress: e.target.value })}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none resize-none"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all outline-none resize-none"
                                     placeholder="Full street address, City, State, ZIP..."
                                 />
                             </div>
@@ -234,14 +279,14 @@ const Onboarding = () => {
                             {/* ID & Email - Side by Side */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Company ID (Unique) *</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Company ID (Auto-generated)</label>
                                     <input
                                         required
                                         type="text"
                                         value={companyForm.companyId}
-                                        onChange={e => setCompanyForm({ ...companyForm, companyId: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none"
-                                        placeholder="e.g. ACME-001"
+                                        readOnly
+                                        className="w-full px-4 py-3 bg-gray-100 border border-gray-100 rounded-lg text-gray-500 cursor-not-allowed outline-none"
+                                        placeholder="Generating ID..."
                                     />
                                 </div>
                                 <div>
@@ -250,7 +295,7 @@ const Onboarding = () => {
                                         type="email"
                                         value={companyForm.contactEmail}
                                         onChange={e => setCompanyForm({ ...companyForm, contactEmail: e.target.value })}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg text-gray-700 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all outline-none"
                                         placeholder="contact@company.com"
                                     />
                                 </div>
@@ -287,8 +332,13 @@ const Onboarding = () => {
                                     required
                                     type="text"
                                     value={clientForm.name}
-                                    onChange={e => setClientForm({ ...clientForm, name: e.target.value })}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                                            setClientForm({ ...clientForm, name: val });
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858]"
                                 />
                             </div>
 
@@ -299,7 +349,7 @@ const Onboarding = () => {
                                     type="email"
                                     value={clientForm.email}
                                     onChange={e => setClientForm({ ...clientForm, email: e.target.value })}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858]"
                                 />
                             </div>
 
@@ -309,8 +359,14 @@ const Onboarding = () => {
                                     required
                                     type="tel"
                                     value={clientForm.phoneNumber}
-                                    onChange={e => setClientForm({ ...clientForm, phoneNumber: e.target.value })}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        // Only allow digits and max length 10
+                                        if (val === '' || (/^\d+$/.test(val) && val.length <= 10)) {
+                                            setClientForm({ ...clientForm, phoneNumber: val });
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858]"
                                 />
                             </div>
 
@@ -360,8 +416,13 @@ const Onboarding = () => {
                                     required
                                     type="text"
                                     value={adminForm.name}
-                                    onChange={e => setAdminForm({ ...adminForm, name: e.target.value })}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                                            setAdminForm({ ...adminForm, name: val });
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858]"
                                 />
                             </div>
 
@@ -372,7 +433,7 @@ const Onboarding = () => {
                                     type="email"
                                     value={adminForm.email}
                                     onChange={e => setAdminForm({ ...adminForm, email: e.target.value })}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858]"
                                 />
                             </div>
 
@@ -382,8 +443,14 @@ const Onboarding = () => {
                                     required
                                     type="tel"
                                     value={adminForm.phoneNumber}
-                                    onChange={e => setAdminForm({ ...adminForm, phoneNumber: e.target.value })}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        // Only allow digits and max length 10
+                                        if (val === '' || (/^\d+$/.test(val) && val.length <= 10)) {
+                                            setAdminForm({ ...adminForm, phoneNumber: val });
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858]"
                                 />
                             </div>
                         </div>

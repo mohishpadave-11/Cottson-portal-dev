@@ -58,9 +58,12 @@ textarea:focus {
 
 /* Loading animation */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -76,6 +79,7 @@ textarea:focus {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -94,6 +98,7 @@ textarea:focus {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -113,4 +118,30 @@ textarea:focus {
 .drag-over {
   background-color: rgba(59, 130, 246, 0.1);
   border-color: rgb(59, 130, 246);
+}
+
+.btn-primary {
+  background-color: #0d3858;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0a2c46;
+}
+
+/* Override default blue buttons if they use generic classes */
+.bg-blue-600 {
+  background-color: #0d3858 !important;
+}
+
+.hover\:bg-blue-700:hover {
+  background-color: #0a2c46 !important;
+}
+
+/* Production-grade Glassmorphism */
+.glass-header {
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }

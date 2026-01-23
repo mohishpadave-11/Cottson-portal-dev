@@ -36,9 +36,14 @@ const companySchema = new mongoose.Schema(
     ],
     companyId: {
       type: String,
-      // required: [true, "Company ID is required"],
       unique: true,
       trim: true,
+    },
+    shortCode: {
+      type: String,
+      unique: true,
+      trim: true,
+      uppercase: true,
     },
     status: {
       type: String,
@@ -70,6 +75,6 @@ const companySchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-companySchema.index({ gstNumber: 1, companyId: 1 });
+companySchema.index({ gstNumber: 1, companyId: 1, shortCode: 1 });
 
 export default mongoose.model("Company", companySchema);

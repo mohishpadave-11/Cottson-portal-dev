@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -295,46 +296,60 @@ const Companies = () => {
         </div>
       </div>
 
+      {/* Search Card */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <input
+          type="text"
+          placeholder="Search by company name, ID, or GST..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-3 border border-gray-100 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all"
+        />
+      </div>
+
       {loading ? (
         <TableLoader rows={10} columns={6} />
       ) : (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b">
-            <input
-              type="text"
-              placeholder="Search companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+            <table className="w-full text-left">
+              <thead className="bg-[#0d3858] text-white border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trade Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">GST Number</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Billing Address</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Company Name</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Trade Name</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">GST Number</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Billing Address</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Company ID</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {currentItems.map(company => (
-                  <tr key={company._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{company.companyName}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{company.tradeName}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{company.gstNumber}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{company.billingAddress}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{company.companyId}</td>
-                    <td className="px-6 py-4 text-sm">
+                  <tr key={company._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{company.companyName}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600">{company.tradeName}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600 font-mono">{company.gstNumber}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600 max-w-xs truncate" title={company.billingAddress}>
+                        {company.billingAddress}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-md uppercase">
+                        {company.companyId}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={() => handleEdit(company)}
-                          className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
-                          title="View Details"
+                          className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -344,8 +359,7 @@ const Companies = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(company)}
-                          className="text-red-600 hover:text-red-800 flex items-center space-x-1"
-                          title="Delete Company"
+                          className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -356,15 +370,24 @@ const Companies = () => {
                     </td>
                   </tr>
                 ))}
+                {currentItems.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                      No companies found matching your search.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          <div className="bg-white px-6 py-4 border-t border-gray-100">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       )}
 

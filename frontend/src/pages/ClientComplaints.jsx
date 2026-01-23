@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -193,6 +194,21 @@ const ClientComplaints = () => {
                       <option key={order._id} value={order._id}>
                         Order #{order.orderNumber} - {new Date(order.orderDate).toLocaleDateString()}
                       </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority <span className="text-red-500">*</span></label>
+                  <select
+                    required
+                    value={formData.priority}
+                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Object.values(PRIORITY_LEVELS).map(priority => (
+                      <option key={priority} value={priority}>{priority}</option>
                     ))}
                   </select>
                 </div>

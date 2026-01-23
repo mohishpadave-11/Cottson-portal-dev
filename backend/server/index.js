@@ -90,8 +90,29 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Handle Uncaught Exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(err.name, err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+// Handle Unhandled Rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ UNHANDLED REJECTION! Shutting down...');
+  console.error(err.name, err.message);
+  console.error(err);
+  // Close server & exit process
+  process.exit(1);
+});
+
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI, {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
   .then(async () => {
     console.log("✅ MongoDB connected successfully");
     console.log(`📊 Database: ${mongoose.connection.name}`);
@@ -138,10 +159,13 @@ app.use('/api/*', (req, res) => {
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', err);
+  console.error('❌ Server Error Stack:', err.stack);
+  console.error('❌ Server Error Message:', err.message);
+
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || 'Internal Server Error'
+    message: err.message || 'Internal Server Error',
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 

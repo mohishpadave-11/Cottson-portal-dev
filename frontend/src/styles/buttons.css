@@ -1,12 +1,12 @@
 /* Primary Button - Matches Sidebar Color */
 .btn-primary {
-  background: linear-gradient(to bottom, #0f172a, #1e293b);
+  background: #0d3858;
   color: white;
   transition: all 0.2s;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(to bottom, #1e293b, #334e68);
+  background: #0a2c46;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
@@ -18,17 +18,17 @@
 
 /* Active Navigation Item */
 .nav-active {
-  background: #1e293b;
-  box-shadow: 0 10px 15px -3px rgba(30, 41, 59, 0.5);
+  background: #0a2c46;
+  box-shadow: 0 10px 15px -3px rgba(13, 56, 88, 0.5);
 }
 
 /* Progress Bar */
 .progress-bar-primary {
-  background: linear-gradient(to right, #0f172a, #1e293b);
+  background: #0d3858;
 }
 
 /* Pagination Active */
 .pagination-active {
-  background: #0f172a;
-  border-color: #0f172a;
+  background: #0d3858;
+  border-color: #0d3858;
 }

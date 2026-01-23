@@ -8,6 +8,10 @@ const orderSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    sequence: {
+      type: Number,
+      required: true,
+    },
     orderDate: {
       type: Date,
       required: [true, "Order date is required"],
@@ -70,12 +74,12 @@ const orderSchema = new mongoose.Schema(
     paymentStatus: {
       type: String,
       enum: [
-        "Advance Payment",
-        "Balance Remaining",
-        "Payment Completed",
-        "Pending",
+        "Advance Pending",
+        "Balance Pending",
+        "Full Settlement",
+        "Cancelled",
       ],
-      default: "Pending",
+      default: "Advance Pending",
     },
     orderStatus: {
       type: String,
@@ -209,38 +213,37 @@ orderSchema.pre("save", function (next) {
 });
 
 
-// Update payment status logic
+// Update payment status logic (Disabled for manual selection)
 orderSchema.methods.updatePaymentStatus = function () {
-  const totalDue = this.priceWithGst;
-  const advanceAmount = totalDue * ((this.advancePercentage || 60) / 100);
-
-  if (this.amountPaid >= totalDue) {
-    this.paymentStatus = 'Payment Completed';
-  } else if (this.amountPaid >= advanceAmount) {
-    this.paymentStatus = 'Advance Payment';
-  } else {
-    this.paymentStatus = 'Balance Remaining';
-  }
+  // Manual status management requested
+  return;
 };
 
-// Generate Order Number: CC/ON/MM/YYYY/SS
-orderSchema.statics.generateOrderNumber = async function () {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
+// Generate Order Number: CC/ON/{shortCode}/{sequence}
+orderSchema.statics.generateOrderNumber = async function (companyId) {
+  if (!companyId) {
+    throw new Error("companyId is required to generate order number");
+  }
 
-  const startOfMonth = new Date(year, date.getMonth(), 1);
-  const endOfMonth = new Date(year, date.getMonth() + 1, 1);
+  // 1. Get company shortCode
+  const Company = mongoose.model("Company");
+  const company = await Company.findById(companyId);
+  if (!company || !company.shortCode) {
+    throw new Error("Company not found or missing shortCode");
+  }
 
-  const count = await this.countDocuments({
-    createdAt: {
-      $gte: startOfMonth,
-      $lt: endOfMonth,
-    },
-  });
+  // 2. Find max sequence for this company
+  const lastOrder = await this.findOne({ companyId })
+    .sort({ sequence: -1 })
+    .select("sequence");
 
-  const sequence = String(count + 1).padStart(2, "0");
-  return `CC/ON/${month}/${year}/${sequence}`;
+  const nextSequence = lastOrder ? (lastOrder.sequence || 0) + 1 : 1;
+
+  // 3. Format order number
+  const paddedSequence = String(nextSequence).padStart(2, "0");
+  const orderNumber = `CC/ON/${company.shortCode}/${paddedSequence}`;
+
+  return { orderNumber, sequence: nextSequence };
 };
 
 export default mongoose.model("Order", orderSchema);

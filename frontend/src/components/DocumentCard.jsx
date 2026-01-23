@@ -1,3 +1,4 @@
+import React from 'react';
 
 import { useState } from 'react';
 import { useToast } from '../contexts/ToastContext';
@@ -137,7 +138,7 @@ const DocumentCard = ({
                                             <input
                                                 type="file"
                                                 className="hidden"
-                                                accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                                                accept=".pdf,.jpg,.jpeg,.png"
                                                 onChange={onReplace}
                                             />
                                         </label>
@@ -162,7 +163,7 @@ const DocumentCard = ({
                                         <input
                                             type="file"
                                             className="hidden"
-                                            accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                                            accept=".pdf,.jpg,.jpeg,.png"
                                             onChange={onReplace}
                                         />
                                     </label>

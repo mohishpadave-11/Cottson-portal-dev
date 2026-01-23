@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ButtonLoader } from '../components/Loader';
@@ -30,6 +31,13 @@ const ClientModal = ({ client, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate phone number length
+    if (formData.phoneNumber.length !== 10) {
+      alert('Phone number must be exactly 10 digits');
+      return;
+    }
+
     try {
       setSaving(true);
       if (client) {
@@ -109,7 +117,12 @@ const ClientModal = ({ client, onClose, onSave }) => {
                       required
                       disabled={saving}
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                          setFormData({ ...formData, name: val });
+                        }
+                      }}
                       placeholder="Enter full name"
                       className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                     />
@@ -153,7 +166,12 @@ const ClientModal = ({ client, onClose, onSave }) => {
                       required
                       disabled={saving}
                       value={formData.phoneNumber}
-                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || (/^\d+$/.test(val) && val.length <= 10)) {
+                          setFormData({ ...formData, phoneNumber: e.target.value });
+                        }
+                      }}
                       placeholder="+91 98765 43210"
                       className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                     />

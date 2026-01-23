@@ -1,3 +1,5 @@
+import React from 'react';
+
 const Loader = ({ size = 'default', fullScreen = false, text = 'Loading...' }) => {
   const sizeClasses = {
     small: 'w-4 h-4 border-2',

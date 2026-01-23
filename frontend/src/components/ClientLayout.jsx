@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../config/api';
@@ -124,16 +125,20 @@ const ClientLayout = ({ children }) => {
 
           {sidebarCollapsed && !mobileMenuOpen ? (
             <div className="flex items-center justify-center">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-[#0f172a]">C</span>
+              <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+                <img
+                  src="/transparentfavicon.jpeg"
+                  alt="Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center bg-white rounded-lg p-3">
+            <div className="flex items-center justify-center">
               <img
-                src="/logo (1).png"
+                src="/transparentlogo.jpeg"
                 alt="Client Portal Logo"
-                className="h-12 w-auto object-contain"
+                className="h-20 max-w-[200px] w-auto object-contain"
               />
             </div>
           )}

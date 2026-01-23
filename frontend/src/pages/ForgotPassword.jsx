@@ -1,11 +1,18 @@
+import React from 'react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../config/api';
 
 const ForgotPassword = () => {
+    const [searchParams] = useSearchParams();
+    const from = searchParams.get('from');
+
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState('idle'); // idle, loading, success, error
     const [message, setMessage] = useState('');
+
+    const loginLink = from === 'client' ? '/client/login' : '/login';
+    const loginText = from === 'client' ? 'Back to Client Login' : 'Back to Login';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -25,9 +32,10 @@ const ForgotPassword = () => {
     return (
         <div className="min-h-screen flex selection:bg-blue-100 selection:text-blue-900 overflow-hidden bg-white">
             {/* Left Side - Image & Branding */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900 text-white flex-col justify-end p-12 lg:p-16 overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 relative bg-[#0f172a] text-white flex-col justify-end p-12 lg:p-16 overflow-hidden">
                 <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+                    <img src="/login.JPG" alt="Background" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-[#0d3858] opacity-90"></div>
                 </div>
 
                 <div className="relative z-10 w-full max-w-lg">
@@ -39,7 +47,7 @@ const ForgotPassword = () => {
                     </h1>
 
                     <p className="text-lg text-gray-300 font-light leading-relaxed mb-12">
-                        Providing the world's finest fashion houses with sustainable, premium manufacturing solutions for over three decades.
+                        Sign in to workwear crafted for comfort and built for performance.
                     </p>
                 </div>
             </div>
@@ -49,16 +57,12 @@ const ForgotPassword = () => {
                 <div className="w-full max-w-md space-y-8">
                     {/* Header */}
                     <div className="space-y-6">
-                        <div className="flex items-center space-x-3 mb-8">
-                            {/* Simple Logo Icon */}
-                            <div className="text-blue-900">
-                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" className="opacity-0" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12a7.5 7.5 0 0015 0 7.5 7.5 0 00-15 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                            </div>
-                            <span className="text-2xl font-bold tracking-widest text-gray-900">COTTSON</span>
+                        <div className="flex items-center justify-center mb-8">
+                            <img
+                                src="/logo.png"
+                                alt="Cottson Logo"
+                                className="h-16 w-auto object-contain"
+                            />
                         </div>
 
                         <div>
@@ -79,10 +83,10 @@ const ForgotPassword = () => {
                             <h3 className="text-xl font-bold text-gray-900 mb-2">Check your email</h3>
                             <p className="text-gray-500 mb-8">{message}</p>
                             <Link
-                                to="/login"
+                                to={loginLink}
                                 className="inline-block w-full bg-blue-800 text-white py-3.5 rounded-lg font-bold hover:bg-blue-900 transition-all duration-200"
                             >
-                                Back to Login
+                                {loginText}
                             </Link>
                         </div>
                     ) : (
@@ -105,7 +109,7 @@ const ForgotPassword = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full px-4 py-3 text-gray-900 border border-gray-200 rounded-lg placeholder-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors bg-white hover:border-gray-300"
+                                    className="block w-full px-4 py-3 text-gray-900 border border-gray-200 rounded-lg placeholder-gray-300 focus:outline-none focus:border-[#0d3858] focus:ring-1 focus:ring-[#0d3858] transition-colors bg-white hover:border-gray-300"
                                     placeholder="name@cottson.com"
                                 />
                             </div>
@@ -113,7 +117,7 @@ const ForgotPassword = () => {
                             <button
                                 type="submit"
                                 disabled={status === 'loading'}
-                                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-[#0d3858] hover:bg-[#0a2c46] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0d3858] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {status === 'loading' ? (
                                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -124,11 +128,11 @@ const ForgotPassword = () => {
                             </button>
 
                             <div className="text-center">
-                                <Link to="/login" className="text-sm font-semibold text-gray-500 hover:text-blue-800 transition-colors flex items-center justify-center group">
+                                <Link to={loginLink} className="text-sm font-semibold text-gray-500 hover:text-blue-800 transition-colors flex items-center justify-center group">
                                     <svg className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                                     </svg>
-                                    Back to Login
+                                    {loginText}
                                 </Link>
                             </div>
                         </form>
@@ -138,8 +142,7 @@ const ForgotPassword = () => {
                     <div className="pt-8 mt-8 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 font-medium uppercase tracking-wider">
                         <p>&copy; 2026 Cottson Group</p>
                         <div className="space-x-4">
-                            <a href="#" className="hover:text-gray-600">Help</a>
-                            <a href="#" className="hover:text-gray-600">Privacy</a>
+                            <a href="mailto:contact@cottson.com" className="hover:text-gray-600">Contact Us</a>
                         </div>
                     </div>
                 </div>

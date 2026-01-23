@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
@@ -51,13 +52,14 @@ const OrderDetails = () => {
     quantity: '',
     price: '',
     discount: 0,
+    discountPercentage: 0,
     priceWithGst: '',
     priceAfterDiscount: '',
     shippingAddress: '', // New Field
     customCharges: [], // Array of { name, amount }
     advancePercentage: 60,
     amountPaid: 0,
-    paymentStatus: 'Balance Remaining',
+    paymentStatus: 'Advance Pending',
     companyId: '',
     clientId: '',
     productId: '',
@@ -87,7 +89,7 @@ const OrderDetails = () => {
         fetchClients(),
         fetchProducts(),
         fetchChargeTypes(),
-        id !== 'new' ? fetchOrder() : fetchNextOrderNumber()
+        id !== 'new' ? fetchOrder() : Promise.resolve()
       ]);
     } finally {
       setLoading(false);
@@ -109,7 +111,10 @@ const OrderDetails = () => {
         companyId: orderData.companyId?._id || orderData.companyId,
         clientId: orderData.clientId?._id || orderData.clientId,
         productId: orderData.productId?._id || orderData.productId,
-        customCharges: orderData.customCharges || []
+        customCharges: orderData.customCharges || [],
+        discountPercentage: orderData.price && orderData.quantity && orderData.discount
+          ? ((orderData.discount / (orderData.price * orderData.quantity)) * 100).toFixed(2)
+          : 0
       };
 
       setFormData(formattedData);
@@ -160,9 +165,12 @@ const OrderDetails = () => {
     }
   };
 
-  const fetchNextOrderNumber = async () => {
+  const fetchNextOrderNumber = async (companyId) => {
+    if (!companyId) return;
     try {
-      const response = await api.get('/api/orders/next-number');
+      const response = await api.get('/api/orders/next-number', {
+        params: { companyId }
+      });
       if (response.data.success) {
         setFormData(prev => ({
           ...prev,
@@ -465,10 +473,13 @@ const OrderDetails = () => {
     // 5. Final Total
     const total = taxableValue + gstAmount + customChargesTotal;
 
+    const currentPercentage = subtotal > 0 ? (discount / subtotal) * 100 : 0;
+
     setFormData(prev => ({
       ...prev,
       priceWithGst: total.toFixed(2),
-      priceAfterDiscount: taxableValue.toFixed(2)
+      priceAfterDiscount: taxableValue.toFixed(2),
+      discountPercentage: currentPercentage.toFixed(2)
     }));
   };
 
@@ -1008,10 +1019,36 @@ const OrderDetails = () => {
                   </svg>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900">{paymentPercentage}% Paid</p>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div className="progress-bar-primary h-2 rounded-full" style={{ width: `${paymentPercentage}%` }}></div>
-              </div>
+              {isEditing ? (
+                <div className="relative mt-2">
+                  <select
+                    value={formData.paymentStatus}
+                    onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
+                    className="w-full text-lg font-bold text-gray-900 bg-white border-2 border-blue-500 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                  >
+                    <option value="Advance Pending">Advance Pending</option>
+                    <option value="Balance Pending">Balance Pending</option>
+                    <option value="Full Settlement">Full Settlement</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-blue-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className={`text-2xl font-bold ${formData.paymentStatus === 'Full Settlement' ? 'text-green-600' :
+                    formData.paymentStatus === 'Cancelled' ? 'text-red-900' :
+                      formData.paymentStatus === 'Advance Pending' ? 'text-red-600' :
+                        'text-yellow-600'
+                    }`}>
+                    {formData.paymentStatus}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{paymentPercentage}% Paid</p>
+                </>
+              )}
             </div>
           </div>
 
@@ -1097,18 +1134,22 @@ const OrderDetails = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Company <span className="text-red-500">*</span></label>
                       <div className="relative">
                         <select
                           required
                           disabled={!isEditing}
                           value={formData.companyId}
                           onChange={(e) => {
+                            const selectedCompanyId = e.target.value;
                             setFormData({
                               ...formData,
-                              companyId: e.target.value,
+                              companyId: selectedCompanyId,
                               clientId: '' // Reset client when company changes
                             });
+                            if (id === 'new' && selectedCompanyId) {
+                              fetchNextOrderNumber(selectedCompanyId);
+                            }
                           }}
                           className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 appearance-none cursor-pointer bg-white"
                         >
@@ -1227,18 +1268,66 @@ const OrderDetails = () => {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Discount (Flat Amount)</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
-                        <input
-                          type="number"
-                          disabled={!isEditing}
-                          value={formData.discount}
-                          onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
-                          placeholder="0"
-                          className="w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Discount (%)</label>
+                        <div className="relative">
+                          <span className="absolute right-4 top-3.5 text-gray-500 font-medium">%</span>
+                          <input
+                            type="number"
+                            disabled={!isEditing}
+                            value={formData.discountPercentage}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const percentage = parseFloat(val) || 0;
+                              const price = parseFloat(formData.price) || 0;
+                              const quantity = parseFloat(formData.quantity) || 0;
+                              const subtotal = price * quantity;
+
+                              const flatAmount = (subtotal * percentage) / 100;
+
+                              setFormData({
+                                ...formData,
+                                discountPercentage: val, // Keep string to allow typing decimals
+                                discount: flatAmount.toFixed(2) // Update flat amount
+                              });
+                            }}
+                            placeholder="0"
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Discount (₹)</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-3.5 text-gray-500 font-medium">₹</span>
+                          <input
+                            type="number"
+                            disabled={!isEditing}
+                            value={formData.discount}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const flatAmount = parseFloat(val) || 0;
+                              const price = parseFloat(formData.price) || 0;
+                              const quantity = parseFloat(formData.quantity) || 0;
+                              const subtotal = price * quantity;
+
+                              let percentage = 0;
+                              if (subtotal > 0) {
+                                percentage = (flatAmount / subtotal) * 100;
+                              }
+
+                              setFormData({
+                                ...formData,
+                                discount: val, // Keep string for typing
+                                discountPercentage: percentage.toFixed(2)
+                              });
+                            }}
+                            placeholder="0"
+                            className="w-full pl-8 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -1605,17 +1694,17 @@ const OrderDetails = () => {
                   {order?.payments?.length > 0 && (
                     <div className="border-t border-gray-200 mt-6 pt-4">
                       <h3 className="text-sm font-bold text-gray-900 mb-3">Payment History</h3>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead>
+                      <div className="overflow-x-auto rounded-xl border border-gray-100">
+                        <table className="min-w-full">
+                          <thead className="bg-[#0d3858] text-white">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Date</th>
+                              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Amount</th>
+                              <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider">Type</th>
+                              <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider">Actions</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200">
+                          <tbody className="divide-y divide-gray-100 bg-white">
                             {order.payments.map((payment) => (
                               <tr key={payment._id}>
                                 <td className="px-3 py-2 text-xs text-gray-900">

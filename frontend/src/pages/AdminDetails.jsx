@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -57,6 +58,13 @@ const AdminDetails = () => {
         e.preventDefault();
         try {
             setSaving(true);
+
+            // Validate phone number length
+            if (formData.phoneNumber.length !== 10) {
+                toast.error('Error', 'Phone number must be exactly 10 digits');
+                setSaving(false);
+                return;
+            }
 
             if (id === 'new') {
                 await api.post('/api/admins', formData);
@@ -138,7 +146,12 @@ const AdminDetails = () => {
                                         required
                                         disabled={!isEditing}
                                         value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                                                setFormData({ ...formData, name: val });
+                                            }
+                                        }}
                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                                     />
                                 </div>
@@ -161,7 +174,13 @@ const AdminDetails = () => {
                                         required
                                         disabled={!isEditing}
                                         value={formData.phoneNumber}
-                                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            // Only allow digits and max length 10
+                                            if (val === '' || (/^\d+$/.test(val) && val.length <= 10)) {
+                                                setFormData({ ...formData, phoneNumber: val });
+                                            }
+                                        }}
                                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                                     />
                                 </div>

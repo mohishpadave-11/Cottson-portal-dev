@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -41,6 +42,13 @@ const AdminProfile = () => {
     e.preventDefault();
     try {
       setSaving(true);
+
+      // Validate phone number length
+      if (formData.phone.length !== 10) {
+        toast.error('Error', 'Phone number must be exactly 10 digits');
+        setSaving(false);
+        return;
+      }
       // Determine endpoint based on role or use a generic profile update endpoint
       // Assuming /api/auth/profile-update or similar. 
       // Since I haven't seen the route, I'll use a placeholder and rely on the user to implement the backend or I'll check routes next.
@@ -189,7 +197,12 @@ const AdminProfile = () => {
                     required
                     disabled={!isEditing}
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^[a-zA-Z\s]+$/.test(val)) {
+                        setFormData({ ...formData, name: val });
+                      }
+                    }}
                     placeholder="Enter full name"
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                   />
@@ -215,7 +228,13 @@ const AdminProfile = () => {
                     required
                     disabled={!isEditing}
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Only allow digits and max length 10
+                      if (val === '' || (/^\d+$/.test(val) && val.length <= 10)) {
+                        setFormData({ ...formData, phone: val });
+                      }
+                    }}
                     placeholder="+1 (555) 123-4567"
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200"
                   />

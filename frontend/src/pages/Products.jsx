@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import collectionService from '../services/collectionService';
 import productService from '../services/productService';
@@ -258,14 +259,14 @@ const Products = () => {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-[#0d3858] text-white">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Product Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Category</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">SKU</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Price</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase">Status</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -345,7 +346,7 @@ const Products = () => {
                                     required
                                     value={collectionForm.name}
                                     onChange={(e) => setCollectionForm({ ...collectionForm, name: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                 />
                             </div>
                             <div>
@@ -353,7 +354,7 @@ const Products = () => {
                                 <textarea
                                     value={collectionForm.description}
                                     onChange={(e) => setCollectionForm({ ...collectionForm, description: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                     rows="3"
                                 />
                             </div>
@@ -381,7 +382,7 @@ const Products = () => {
                                     required
                                     value={productForm.name}
                                     onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -392,7 +393,7 @@ const Products = () => {
                                         required
                                         value={productForm.basePrice}
                                         onChange={(e) => setProductForm({ ...productForm, basePrice: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                     />
                                 </div>
                                 <div>
@@ -400,7 +401,7 @@ const Products = () => {
                                     <select
                                         value={productForm.category}
                                         onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                     >
                                         <option value="Apparel">Apparel</option>
                                         <option value="Accessories">Accessories</option>
@@ -415,7 +416,7 @@ const Products = () => {
                                 <select
                                     value={productForm.status}
                                     onChange={(e) => setProductForm({ ...productForm, status: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                 >
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
@@ -427,7 +428,7 @@ const Products = () => {
                                     type="text"
                                     value={productForm.sku}
                                     onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                 />
                             </div>
                             <div>
@@ -435,7 +436,7 @@ const Products = () => {
                                 <textarea
                                     value={productForm.description}
                                     onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                                     rows="3"
                                 />
                             </div>

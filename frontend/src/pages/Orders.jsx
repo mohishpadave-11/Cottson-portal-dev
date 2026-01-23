@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../components/Pagination';
@@ -138,8 +139,8 @@ const Orders = () => {
 
   // Calculate stats
   const totalRevenue = filteredOrders.reduce((sum, order) => sum + (parseFloat(order.priceWithGst) || 0), 0);
-  const pendingOrders = filteredOrders.filter(order => order.paymentStatus !== 'Payment Completed').length;
-  const completedOrders = filteredOrders.filter(order => order.paymentStatus === 'Payment Completed').length;
+  const pendingOrders = filteredOrders.filter(order => order.paymentStatus !== 'Full Settlement').length;
+  const completedOrders = filteredOrders.filter(order => order.paymentStatus === 'Full Settlement').length;
 
   return (
     <div className="space-y-6">
@@ -207,42 +208,43 @@ const Orders = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
+      {/* Filters Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Search</label>
             <input
               type="text"
               placeholder="Order #, Company, Client..."
               value={filters.searchQuery}
               onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-100 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Start Date</label>
             <input
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-100 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">End Date</label>
             <input
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-100 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Company</label>
             <select
               value={filters.companyId}
               onChange={(e) => setFilters({ ...filters, companyId: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-100 bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]/10 focus:border-[#0d3858] transition-all"
             >
               <option value="">All Companies</option>
               {companies.map(company => (
@@ -255,32 +257,35 @@ const Orders = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      {/* Table Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
+          <table className="w-full text-left">
+            <thead className="bg-[#0d3858] text-white border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price with GST</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Order Number</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Order Date</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Quantity</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Price with GST</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Order Status</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Payment Status</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Company</th>
+                <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 bg-white">
               {currentItems.map(order => (
-                <tr key={order._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{order.orderNumber}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-semibold text-gray-900 font-mono">#{order.orderNumber}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(order.orderDate).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{order.quantity}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">₹{order.priceWithGst?.toLocaleString()}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs ${order.timeline === 'Order Completed' ? 'bg-gray-100 text-gray-800' :
+                  <td className="px-6 py-4 text-sm text-gray-600 font-medium">{order.quantity}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">₹{order.priceWithGst?.toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase ${order.timeline === 'Order Completed' ? 'bg-gray-100 text-gray-800' :
                       order.timeline === 'Shipped' ? 'bg-teal-100 text-teal-800' :
                         order.timeline === 'Packing' ? 'bg-green-100 text-green-800' :
                           order.timeline === 'Stitching' ? 'bg-yellow-100 text-yellow-800' :
@@ -292,61 +297,73 @@ const Orders = () => {
                       {order.timeline}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${order.paymentStatus === 'Payment Completed' ? 'bg-green-100 text-green-800' :
-                      order.paymentStatus === 'Advance Payment' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase whitespace-nowrap ${order.paymentStatus === 'Full Settlement' ? 'bg-[#d4edda] text-[#155724]' :
+                      order.paymentStatus === 'Advance Pending' ? 'bg-[#f8d7da] text-[#721c24]' :
+                        order.paymentStatus === 'Balance Pending' ? 'bg-[#fff3cd] text-[#856404]' :
+                          order.paymentStatus === 'Cancelled' ? 'bg-[#721c24] text-white' :
+                            'bg-gray-100 text-gray-800'
                       }`}>
                       {order.paymentStatus}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{order.companyId?.companyName || '-'}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center space-x-3">
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-600 truncate max-w-[150px]" title={order.companyId?.companyName}>
+                      {order.companyId?.companyName || '-'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={() => navigate(`/orders/${order._id}`)}
-                        className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                        className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                         title="View Order"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span>View</span>
                       </button>
                       <button
                         onClick={() => navigate(`/orders/${order._id}?tab=timeline`)}
-                        className="text-green-600 hover:text-green-800 flex items-center space-x-1"
+                        className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                         title="View Manufacturing Timeline"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
-                        <span>Timeline</span>
                       </button>
                       <button
                         onClick={() => handleDeleteClick(order)}
-                        className="text-red-600 hover:text-red-800 flex items-center space-x-1"
+                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                         title="Delete Order"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                        <span>Delete</span>
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {currentItems.length === 0 && (
+                <tr>
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                    No orders found matching your filters.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        <div className="bg-white px-6 py-4 border-t border-gray-100">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
       </div>
 
       <ConfirmationModal

@@ -20,7 +20,9 @@ class OrderService {
   async getById(id) {
     try {
       const response = await endpoints.orders.getById(id);
-      return response.data;
+      // Backend returns { success: true, data: order }
+      // So we need to access response.data.data to get the actual order
+      return response.data.data || response.data;
     } catch (error) {
       console.error('Error fetching order:', error);
       // Return null as fallback

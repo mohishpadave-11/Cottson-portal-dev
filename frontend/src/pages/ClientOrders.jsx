@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
@@ -77,8 +78,8 @@ const ClientOrders = () => {
 
   // Calculate stats
   const totalRevenue = filteredOrders.reduce((sum, order) => sum + (parseFloat(order.priceWithGst) || 0), 0);
-  const pendingOrders = filteredOrders.filter(order => order.paymentStatus !== 'Payment Completed').length;
-  const completedOrders = filteredOrders.filter(order => order.paymentStatus === 'Payment Completed').length;
+  const pendingOrders = filteredOrders.filter(order => order.paymentStatus !== 'Full Settlement').length;
+  const completedOrders = filteredOrders.filter(order => order.paymentStatus === 'Full Settlement').length;
 
   if (loading) {
     return (
@@ -154,7 +155,7 @@ const ClientOrders = () => {
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
             />
           </div>
           <div>
@@ -163,7 +164,7 @@ const ClientOrders = () => {
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
             />
           </div>
           <div>
@@ -171,12 +172,13 @@ const ClientOrders = () => {
             <select
               value={filters.paymentStatus}
               onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
             >
               <option value="">All Status</option>
-              <option value="Advance Payment">Advance Payment</option>
-              <option value="Payment Completed">Payment Completed</option>
-              <option value="Pending">Pending</option>
+              <option value="Advance Pending">Advance Pending</option>
+              <option value="Balance Pending">Balance Pending</option>
+              <option value="Full Settlement">Full Settlement</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -187,15 +189,15 @@ const ClientOrders = () => {
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-[#0d3858] text-white">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price with GST</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Order Number</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Order Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Quantity</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Price with GST</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Payment Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -220,9 +222,11 @@ const ClientOrders = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">₹{order.price.toLocaleString()}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">₹{order.priceWithGst.toLocaleString()}</td>
                     <td className="px-6 py-4 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.paymentStatus === 'Payment Completed' ? 'bg-green-100 text-green-800' :
-                          order.paymentStatus === 'Advance Payment' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase whitespace-nowrap ${order.paymentStatus === 'Full Settlement' ? 'bg-[#d4edda] text-[#155724]' :
+                          order.paymentStatus === 'Advance Pending' ? 'bg-[#f8d7da] text-[#721c24]' :
+                            order.paymentStatus === 'Balance Pending' ? 'bg-[#fff3cd] text-[#856404]' :
+                              order.paymentStatus === 'Cancelled' ? 'bg-[#721c24] text-white' :
+                                'bg-gray-100 text-gray-800'
                         }`}>
                         {order.paymentStatus}
                       </span>
@@ -266,9 +270,11 @@ const ClientOrders = () => {
                     <p className="font-semibold text-gray-900">Order #{order.orderNumber}</p>
                     <p className="text-sm text-gray-500">{new Date(order.orderDate).toLocaleDateString()}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.paymentStatus === 'Payment Completed' ? 'bg-green-100 text-green-800' :
-                      order.paymentStatus === 'Advance Payment' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase whitespace-nowrap ${order.paymentStatus === 'Full Settlement' ? 'bg-[#d4edda] text-[#155724]' :
+                    order.paymentStatus === 'Advance Pending' ? 'bg-[#f8d7da] text-[#721c24]' :
+                      order.paymentStatus === 'Balance Pending' ? 'bg-[#fff3cd] text-[#856404]' :
+                        order.paymentStatus === 'Cancelled' ? 'bg-[#721c24] text-white' :
+                          'bg-gray-100 text-gray-800'
                     }`}>
                     {order.paymentStatus}
                   </span>

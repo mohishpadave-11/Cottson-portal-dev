@@ -1,5 +1,6 @@
+import React from 'react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const ClientLogin = () => {
@@ -33,7 +34,7 @@ const ClientLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] to-[#1e293b] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0d3858] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -45,7 +46,7 @@ const ClientLogin = () => {
             />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Client Portal</h1>
-          <p className="text-slate-300">Sign in to view your orders</p>
+          <p className="text-slate-300">Please enter your credentials to access the client portal</p>
         </div>
 
         {/* Login Form */}
@@ -88,7 +89,7 @@ const ClientLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full bg-[#0d3858] text-white py-3 rounded-lg font-medium hover:bg-[#0a2c46] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {loading ? (
                 <>
@@ -104,9 +105,14 @@ const ClientLogin = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link to="/forgot-password?from=client" className="font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                Forgot Password?
+              </Link>
+            </div>
             <p className="text-sm text-gray-600">
-              Need help? Contact your company administrator
+              Contact <a href="mailto:support@cottson.com" className="text-blue-600 hover:underline">Support</a>
             </p>
           </div>
 

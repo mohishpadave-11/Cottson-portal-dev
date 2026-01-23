@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import api from '../config/api';
 import Loader, { ButtonLoader } from '../components/Loader';
@@ -145,7 +146,7 @@ const AdminComplaints = () => {
                     placeholder="Search by subject, client name, or ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0d3858]"
                 />
             </div>
 
@@ -153,15 +154,15 @@ const AdminComplaints = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                        <thead className="bg-[#0d3858] text-white border-b border-gray-200">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Complaint ID</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Client</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Subject</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Priority</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Date</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Action</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Complaint ID</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Client</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Subject</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Priority</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Status</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Date</th>
+                                <th className="px-6 py-4 text-xs font-semibold uppercase">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -199,9 +200,18 @@ const AdminComplaints = () => {
                                         <td className="px-6 py-4">
                                             {filter === 'Active' && (
                                                 <button
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                         setSelectedComplaint(complaint);
                                                         setAdminResponse('');
+                                                        // Mark as read if not already read
+                                                        if (!complaint.isReadByAdmin) {
+                                                            try {
+                                                                await api.patch(`/api/complaints/${complaint._id}/mark-as-read`);
+                                                                fetchComplaints(); // Refresh to update read status locally
+                                                            } catch (err) {
+                                                                console.error('Failed to mark complaint as read:', err);
+                                                            }
+                                                        }
                                                     }}
                                                     className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 text-sm font-medium transition-colors"
                                                 >
@@ -226,9 +236,8 @@ const AdminComplaints = () => {
                 </div>
             </div>
 
-            {/* Resolution Modal */}
             {selectedComplaint && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
                     <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-start mb-6">
@@ -280,7 +289,11 @@ const AdminComplaints = () => {
                                     {selectedComplaint.orderId && (
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Related Order</label>
-                                            <p className="text-gray-900 font-medium font-mono">#{selectedComplaint.orderId.slice(-6).toUpperCase()}</p>
+                                            <p className="text-gray-900 font-medium font-mono">
+                                                #{typeof selectedComplaint.orderId === 'object'
+                                                    ? selectedComplaint.orderId._id.slice(-6).toUpperCase()
+                                                    : selectedComplaint.orderId?.slice(-6).toUpperCase() || 'N/A'}
+                                            </p>
                                         </div>
                                     )}
                                 </div>

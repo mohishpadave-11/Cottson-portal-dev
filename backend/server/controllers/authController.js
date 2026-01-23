@@ -13,6 +13,7 @@ import {
   sendCredentialsEmail,
 } from "../config/mailer.js";
 import { createUser as createUserService } from "../services/userService.js";
+import EmailService from "../services/EmailService.js";
 
 /**
  * User Login
@@ -122,20 +123,12 @@ export const forgotPassword = async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"
       }/reset-password?token=${resetToken}&email=${email}`;
 
-    // Email message
-    const message = `
-      <h2>Password Reset Request</h2>
-      <p>You have requested a password reset. Please click the link below to reset your password:</p>
-      <a href="${resetUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
-      <p>This link will expire in 30 minutes.</p>
-      <p>If you did not request this, please ignore this email.</p>
-    `;
-
     try {
-      const emailSent = await sendEmail(
+      const userName = user.name || (user.firstName + ' ' + user.lastName) || 'User';
+      const emailSent = await EmailService.sendPasswordResetEmail(
         user.email,
-        "Password Reset Request",
-        message
+        userName,
+        resetUrl
       );
 
       if (!emailSent) {
@@ -336,6 +329,7 @@ export const changePassword = async (req, res) => {
 
     // Update password
     user.password = newPassword;
+    user.requiresPasswordChange = false;
     await user.save();
 
     res.status(200).json({

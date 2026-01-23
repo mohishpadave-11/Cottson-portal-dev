@@ -3,6 +3,8 @@ import crypto from 'crypto';
 import User from '../models/User.js';
 import Client from '../models/Client.js';
 import { sendEmail } from '../config/mailer.js';
+import EmailService from './EmailService.js';
+import { EmailTemplates } from '../templates/emailTemplate.js';
 
 class AuthService {
   // Generate JWT Token
@@ -53,7 +55,7 @@ class AuthService {
         tempPassword = this.generateRandomPassword();
       }
 
-      // Create user
+      // Create user with temporary password
       const user = await User.create({
         email,
         password: tempPassword,
@@ -62,7 +64,8 @@ class AuthService {
         name,
         phoneNumber,
         status: 'active',
-        isActive: true
+        isActive: true,
+        requiresPasswordChange: true // Force password change on first login
       });
 
       // Send credentials email
@@ -115,7 +118,8 @@ class AuthService {
         lastName: name.split(' ').slice(1).join(' ') || '',
         phoneNumber,
         isActive: true,
-        status: 'active'
+        status: 'active',
+        requiresPasswordChange: true // Force password change on first login
       });
 
       // 3. Create Client Profile (Linked to User)
@@ -182,6 +186,7 @@ class AuthService {
       return {
         success: true,
         token,
+        requiresPasswordChange: user.requiresPasswordChange || false, // Flag for first-time login
         user: {
           id: user._id,
           email: user.email,
@@ -196,64 +201,75 @@ class AuthService {
     }
   }
 
-  // Forgot Password - Generate reset token
+  // Forgot Password - Generate reset token (Email Link Flow)
   async forgotPassword(email) {
     try {
       const user = await User.findOne({ email });
 
+      // Generic response to prevent email enumeration attacks
+      const genericResponse = {
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      };
+
       if (!user) {
-        throw new Error('No user found with this email');
+        // Return success even if user not found (prevent email scraping)
+        return genericResponse;
       }
 
-      // Generate reset token
+      // Generate secure random reset token
       const resetToken = crypto.randomBytes(32).toString('hex');
       const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-      // Save hashed token and expiry
+      // Save hashed token and expiry (10 minutes)
       user.resetPasswordToken = hashedToken;
-      user.resetPasswordExpire = Date.now() + 30 * 60 * 1000; // 30 minutes
+      user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
       await user.save();
 
-      // Create reset URL
-      const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+      // Create reset URL with the unhashed token
+      const resetUrl = `${process.env.FRONTEND_URL || 'https://portal.cottson.com'}/reset-password/${resetToken}`;
 
-      // Send email
-      await this.sendPasswordResetEmail(user.email, resetUrl, user.name);
+      // Send email using branded template
+      await EmailService.sendPasswordResetEmail(user.email, user.name || user.firstName, resetUrl);
 
-      return {
-        success: true,
-        message: 'Password reset link sent to email'
-      };
+      return genericResponse;
     } catch (error) {
-      throw error;
+      console.error('Forgot password error:', error);
+      throw new Error('Unable to process password reset request. Please try again.');
     }
   }
 
-  // Reset Password
+  // Reset Password using token from email (Forgot Password Flow)
   async resetPassword(resetToken, newPassword) {
     try {
-      // Hash the token from URL
+      // Hash the token from URL to match database
       const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-      // Find user with valid token
+      // Find user with valid token and not expired
       const user = await User.findOne({
         resetPasswordToken: hashedToken,
         resetPasswordExpire: { $gt: Date.now() }
       });
 
       if (!user) {
-        throw new Error('Invalid or expired reset token');
+        throw new Error('Invalid or expired reset token. Please request a new password reset link.');
       }
 
-      // Set new password
+      // Set new password (will be hashed by pre-save hook)
       user.password = newPassword;
+
+      // Clear reset token fields
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
+
+      // User picked a valid password, so no need to force change
+      user.requiresPasswordChange = false;
+
       await user.save();
 
       return {
         success: true,
-        message: 'Password reset successful'
+        message: 'Password reset successful. You can now log in with your new password.'
       };
     } catch (error) {
       throw error;
@@ -289,67 +305,75 @@ class AuthService {
     }
   }
 
-  // Send credentials email
+  // Send credentials email with branded template
   async sendCredentialsEmail(email, password, role, name) {
-    const loginUrl = `${process.env.FRONTEND_URL}/login`;
+    const BRAND_COLOR = '#113858';
 
-    const subject = 'Your Account Credentials - CRM Portal';
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Welcome to CRM Portal</h2>
-        <p>Hello ${name || 'User'},</p>
-        <p>Your account has been created successfully. Here are your login credentials:</p>
-        
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
-          <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
-          <p style="margin: 5px 0;"><strong>Role:</strong> ${role}</p>
-        </div>
-        
-        <p><strong>Important:</strong> Please change your password after first login for security.</p>
-        
-        <a href="${loginUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-          Login Now
-        </a>
-        
-        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-          If you didn't request this account, please contact the administrator.
+    // Determine login URL based on role
+    let loginUrl = 'https://portal.cottson.com';
+    if (role === 'client') {
+      loginUrl = 'https://portal.cottson.com/client/login';
+    } else if (role === 'admin') {
+      loginUrl = 'https://portal.cottson.com/admin/login';
+    } else if (role === 'superadmin') {
+      loginUrl = 'https://portal.cottson.com/superadmin/login';
+    }
+
+    const subject = `Welcome to Cottson Clothing - Your Account Credentials`;
+
+    // Create content with credentials
+    const content = `
+      <h2 style="color: ${BRAND_COLOR}; margin-top: 0;">Welcome to Cottson Clothing</h2>
+      <p>Hello ${name || 'User'},</p>
+      <p>Your account has been successfully created. We're excited to have you on board!</p>
+      
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid ${BRAND_COLOR};">
+        <p style="margin: 0 0 15px; font-size: 15px;"><strong>Your Login Credentials:</strong></p>
+        <p style="margin: 5px 0;"><strong>Email:</strong> ${email}</p>
+        <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${password}</code></p>
+        <p style="margin: 5px 0;"><strong>Role:</strong> ${role.charAt(0).toUpperCase() + role.slice(1)}</p>
+      </div>
+
+      <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 4px; margin: 25px 0;">
+        <p style="margin: 0; color: #856404; font-size: 14px;">
+          <strong>⚠️ Important:</strong> For security reasons, please change your password immediately after your first login.
         </p>
       </div>
+
+      <p>You can now access the portal to:</p>
+      
+      <ul style="color: #666; line-height: 2;">
+        ${role === 'client' ? `
+          <li>Track your orders in real-time</li>
+          <li>View and download documents</li>
+          <li>Monitor manufacturing timeline</li>
+          <li>Submit queries and complaints</li>
+        ` : `
+          <li>Manage orders and clients</li>
+          <li>Upload documents and track progress</li>
+          <li>View analytics and reports</li>
+          <li>Handle customer queries</li>
+        `}
+      </ul>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${loginUrl}" style="background-color: ${BRAND_COLOR}; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+          Access Portal
+        </a>
+      </div>
+
+      <p style="color: #666; font-size: 13px; margin-top: 30px;">
+        If you have any questions or need assistance, feel free to contact us.
+      </p>
     `;
 
+    const html = EmailTemplates.generateEmailTemplate(content, 'Welcome to Cottson Clothing');
     await sendEmail(email, subject, html);
   }
 
-  // Send password reset email
+  // Send password reset email using branded template
   async sendPasswordResetEmail(email, resetUrl, name) {
-    const subject = 'Password Reset Request - CRM Portal';
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Password Reset Request</h2>
-        <p>Hello ${name || 'User'},</p>
-        <p>You requested to reset your password. Click the button below to reset it:</p>
-        
-        <a href="${resetUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-          Reset Password
-        </a>
-        
-        <p style="color: #6b7280; font-size: 14px;">
-          This link will expire in 30 minutes.
-        </p>
-        
-        <p style="color: #6b7280; font-size: 14px;">
-          If you didn't request this, please ignore this email.
-        </p>
-        
-        <p style="color: #9ca3af; font-size: 12px; margin-top: 30px;">
-          Or copy and paste this URL into your browser:<br/>
-          ${resetUrl}
-        </p>
-      </div>
-    `;
-
-    await sendEmail(email, subject, html);
+    await EmailService.sendPasswordResetEmail(email, name, resetUrl);
   }
 
   // Verify token

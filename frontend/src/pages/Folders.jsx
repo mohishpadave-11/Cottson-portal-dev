@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import companyService from '../services/companyService';
@@ -84,7 +85,7 @@ const Folders = () => {
                 <div className="relative w-28 h-24 mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-1">
                   {/* Mac Folder Icon */}
                   <img
-                    src="/icons8-mac-folder-50.png"
+                    src="/mac.png"
                     alt="Folder"
                     className="w-full h-full object-contain drop-shadow-lg"
                   />

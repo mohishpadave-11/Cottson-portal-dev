@@ -1,3 +1,5 @@
+import React from 'react';
+
 const ErrorMessage = ({ message = 'Something went wrong. Please try again.' }) => {
   return (
     <div className="flex items-center justify-center min-h-[400px]">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import Toast from '../components/Toast';
 import { toast as toastEmitter } from '../utils/toastEmitter';
 

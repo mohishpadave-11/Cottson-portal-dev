@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import orderService from '../services/orderService';
@@ -38,9 +39,18 @@ const FolderDetails = () => {
     return Object.values(order.documents).filter(doc => doc).length;
   };
 
-  const handleOrderClick = (order) => {
-    setSelectedOrder(order);
-    setActiveTab('details');
+  const handleOrderClick = async (order) => {
+    try {
+      // Fetch full order details with all populated fields
+      const fullOrderData = await orderService.getById(order._id);
+      setSelectedOrder(fullOrderData);
+      setActiveTab('details');
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      // Fallback to using the order data we already have
+      setSelectedOrder(order);
+      setActiveTab('details');
+    }
   };
 
   const handleBackToFolders = () => {
@@ -159,13 +169,13 @@ const FolderDetails = () => {
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm text-gray-500 mb-1">Delivery Date</p>
+                      <p className="text-sm text-gray-500 mb-1">Expected Delivery</p>
                       <p className="text-base font-medium text-gray-900">
-                        {new Date(selectedOrder.deliveryDate).toLocaleDateString('en-US', {
+                        {selectedOrder.expectedDelivery ? new Date(selectedOrder.expectedDelivery).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
-                        })}
+                        }) : 'N/A'}
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -187,7 +197,7 @@ const FolderDetails = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500">Product Name</span>
                       <span className="text-base font-medium text-gray-900">
-                        {selectedOrder.productId?.productName || 'N/A'}
+                        {selectedOrder.productId?.name || 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -195,9 +205,9 @@ const FolderDetails = () => {
                       <span className="text-base font-medium text-gray-900">{selectedOrder.quantity}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Rate per Unit</span>
+                      <span className="text-sm text-gray-500">Price per Unit</span>
                       <span className="text-base font-medium text-gray-900">
-                        ₹{selectedOrder.ratePerUnit?.toLocaleString() || 'N/A'}
+                        ₹{selectedOrder.price?.toLocaleString() || 'N/A'}
                       </span>
                     </div>
                   </div>
@@ -208,15 +218,15 @@ const FolderDetails = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Details</h3>
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Price (Without GST)</span>
+                      <span className="text-sm text-gray-500">Price (After Discount)</span>
                       <span className="text-base font-medium text-gray-900">
-                        ₹{selectedOrder.priceWithoutGst?.toLocaleString() || 'N/A'}
+                        ₹{selectedOrder.priceAfterDiscount?.toLocaleString() || 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">GST Amount</span>
+                      <span className="text-sm text-gray-500">GST Amount (5%)</span>
                       <span className="text-base font-medium text-gray-900">
-                        ₹{((selectedOrder.priceWithGst - selectedOrder.priceWithoutGst) || 0).toLocaleString()}
+                        ₹{((selectedOrder.priceWithGst - selectedOrder.priceAfterDiscount) || 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center pt-3 border-t border-gray-200">
@@ -225,18 +235,18 @@ const FolderDetails = () => {
                         ₹{selectedOrder.priceWithGst?.toLocaleString() || 'N/A'}
                       </span>
                     </div>
-                    {selectedOrder.advancePayment && (
+                    {selectedOrder.amountPaid && selectedOrder.amountPaid > 0 && (
                       <>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-500">Advance Payment</span>
+                          <span className="text-sm text-gray-500">Amount Paid</span>
                           <span className="text-base font-medium text-gray-900">
-                            ₹{selectedOrder.advancePayment.toLocaleString()}
+                            ₹{selectedOrder.amountPaid.toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-500">Remaining Balance</span>
                           <span className="text-base font-medium text-orange-600">
-                            ₹{(selectedOrder.priceWithGst - selectedOrder.advancePayment).toLocaleString()}
+                            ₹{(selectedOrder.priceWithGst - selectedOrder.amountPaid).toLocaleString()}
                           </span>
                         </div>
                       </>
@@ -323,10 +333,12 @@ const FolderDetails = () => {
           </button>
           <div>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
+              <div className="w-16 h-14 flex items-center justify-center">
+                <img
+                  src="/mac.png"
+                  alt="Folder"
+                  className="w-full h-full object-contain drop-shadow-md"
+                />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">{companyName}</h1>
@@ -402,7 +414,7 @@ const FolderDetails = () => {
                         <div className="flex-1">
                           <h3 className="text-base font-semibold text-gray-900">Order #{order.orderNumber}</h3>
                           <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
-                            <span>{order.productId?.productName || 'N/A'}</span>
+                            <span>{order.productId?.name || 'N/A'}</span>
                             <span>•</span>
                             <span>Qty: {order.quantity}</span>
                             <span>•</span>

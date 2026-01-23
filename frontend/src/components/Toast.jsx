@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect } from 'react';
 
 const Toast = ({ id, title, message, type = 'success', onClose, duration = 4000 }) => {

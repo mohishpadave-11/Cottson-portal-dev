@@ -1,10 +1,44 @@
-/**
- * Company Controller
- * Handles all company-related CRUD operations
- */
-
 import Company from "../models/Company.js";
 import { sendCompanyCreatedEmail } from "../config/mailer.js";
+
+import { generateShortCode } from "../utils/codeGenerator.js";
+
+// Helper function to generate next sequential company ID
+const generateCompanyIdentifiers = async (companyName) => {
+  const existingCompanies = await Company.find({}, { shortCode: 1 });
+  const existingCodes = existingCompanies.map(c => c.shortCode).filter(Boolean);
+
+  const shortCode = generateShortCode(companyName, existingCodes);
+  const companyId = `CC/CN/${shortCode}`;
+
+  return { shortCode, companyId };
+};
+
+// Get the next available company ID
+export const getNextCompanyId = async (req, res) => {
+  try {
+    const { name } = req.query;
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Company name is required for preview"
+      });
+    }
+
+    const { companyId, shortCode } = await generateCompanyIdentifiers(name);
+    res.status(200).json({
+      success: true,
+      nextId: companyId,
+      shortCode
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error generating next ID",
+      error: error.message
+    });
+  }
+};
 
 // Get all companies
 export const getCompanies = async (req, res) => {
@@ -114,16 +148,15 @@ export const createCompany = async (req, res) => {
       });
     }
 
-    // Check if company ID already exists
-    const existingCompanyId = await Company.findOne({ companyId });
-    if (existingCompanyId) {
-      return res.status(400).json({
-        success: false,
-        message: "Company ID already exists",
-      });
-    }
+    // Generate/validate the smart company identifier server-side
+    const { shortCode, companyId: generatedCompanyId } = await generateCompanyIdentifiers(companyName);
 
-    const company = new Company(req.body);
+    // Create company instance with the server-generated identifiers
+    const company = new Company({
+      ...req.body,
+      shortCode,
+      companyId: generatedCompanyId
+    });
     await company.save();
 
     // Send welcome email if contact email is provided
