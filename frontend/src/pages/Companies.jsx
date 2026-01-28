@@ -1,12 +1,10 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../components/Pagination';
 import { TableLoader } from '../components/Loader';
-import companyService from '../services/companyService';
-import clientService from '../services/clientService';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 
@@ -51,7 +49,7 @@ const Companies = () => {
 
   const fetchActiveStats = async () => {
     try {
-      const response = await api.get('/api/stats/companies/active-stats');
+      const response = await endpoints.stats.getActiveCompanyStats();
       if (response.data?.success) {
         setActiveStats(response.data.data);
       }
@@ -62,7 +60,7 @@ const Companies = () => {
 
   const fetchNewStats = async () => {
     try {
-      const response = await api.get('/api/stats/companies/new-stats');
+      const response = await endpoints.stats.getNewCompanyStats();
       if (response.data?.success) {
         setNewCompanyStats(response.data.data);
       }
@@ -73,7 +71,7 @@ const Companies = () => {
 
   const fetchTotalStats = async () => {
     try {
-      const response = await api.get('/api/stats/companies/total-stats');
+      const response = await endpoints.stats.getTotalCompanyStats();
       if (response.data?.success) {
         setTotalStats(response.data.data);
       }
@@ -85,9 +83,10 @@ const Companies = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const data = await companyService.getAll();
-      setCompanies(data);
-      setFilteredCompanies(data);
+      const { data: responseData } = await endpoints.companies.getAll();
+      const data = responseData.data || responseData;
+      setCompanies(Array.isArray(data) ? data : []);
+      setFilteredCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching companies:', error);
       toast.error('Error', 'Failed to load companies');
@@ -101,8 +100,9 @@ const Companies = () => {
 
   const fetchClients = async () => {
     try {
-      const data = await clientService.getAll();
-      setClients(data || []);
+      const { data: responseData } = await endpoints.clients.getAll();
+      const data = responseData.data || responseData;
+      setClients(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching clients:', error);
     }
@@ -118,18 +118,15 @@ const Companies = () => {
 
     try {
       setIsDeleting(true);
-      const result = await companyService.delete(companyToDelete._id);
-      if (result.success) {
-        toast.success('Success', 'Company deleted successfully');
-        fetchCompanies();
-        setDeleteModalOpen(false);
-        setCompanyToDelete(null);
-      } else {
-        toast.error('Error', result.error);
-      }
+      await endpoints.companies.delete(companyToDelete._id);
+
+      toast.success('Success', 'Company deleted successfully');
+      fetchCompanies();
+      setDeleteModalOpen(false);
+      setCompanyToDelete(null);
     } catch (error) {
       console.error('Error deleting company:', error);
-      toast.error('Error', 'An unexpected error occurred');
+      toast.error('Error', error.response?.data?.message || 'Failed to delete company');
     } finally {
       setIsDeleting(false);
     }

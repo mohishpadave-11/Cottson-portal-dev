@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 
 const Login = ({ role }) => {
     const navigate = useNavigate();
@@ -31,7 +31,7 @@ const Login = ({ role }) => {
         setLoading(true);
 
         try {
-            const response = await api.post('/api/auth/login', formData);
+            const response = await endpoints.auth.login(formData);
 
             const { token, user } = response.data;
 

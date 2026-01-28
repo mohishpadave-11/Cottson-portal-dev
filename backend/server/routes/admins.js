@@ -125,6 +125,35 @@ router.use(authenticate);
 router.use(authorize("superadmin"));
 
 // Get all admins
+/**
+ * @swagger
+ * /api/admins:
+ *   get:
+ *     summary: Get all admins (SuperAdmin only)
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of admins
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (SuperAdmin only)
+ */
 router.get("/", async (req, res) => {
   try {
     const admins = await User.find({
@@ -148,6 +177,36 @@ router.get("/", async (req, res) => {
 });
 
 // Get single admin
+/**
+ * @swagger
+ * /api/admins/{id}:
+ *   get:
+ *     summary: Get single admin (SuperAdmin only)
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     responses:
+ *       200:
+ *         description: Admin details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       404:
+ *         description: Admin not found
+ */
 router.get("/:id", async (req, res) => {
   try {
     const admin = await User.findOne({
@@ -176,6 +235,53 @@ router.get("/:id", async (req, res) => {
 });
 
 // Create new admin (SuperAdmin only)
+/**
+ * @swagger
+ * /api/admins:
+ *   post:
+ *     summary: Create new admin (SuperAdmin only)
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - role
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               name:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, superadmin]
+ *     responses:
+ *       201:
+ *         description: Admin created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post("/", async (req, res) => {
   try {
     const { email, role } = req.body;
@@ -223,6 +329,44 @@ router.post("/", async (req, res) => {
 });
 
 // Update admin
+/**
+ * @swagger
+ * /api/admins/{id}:
+ *   put:
+ *     summary: Update admin (SuperAdmin only)
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       200:
+ *         description: Admin updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       404:
+ *         description: Admin not found
+ */
 router.put("/:id", async (req, res) => {
   try {
     const updateData = { ...req.body };
@@ -266,6 +410,36 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete admin
+/**
+ * @swagger
+ * /api/admins/{id}:
+ *   delete:
+ *     summary: Delete admin (SuperAdmin only)
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     responses:
+ *       200:
+ *         description: Admin deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Admin not found
+ */
 router.delete("/:id", async (req, res) => {
   try {
     const admin = await User.findOneAndDelete({
@@ -294,6 +468,38 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Toggle admin status
+/**
+ * @swagger
+ * /api/admins/{id}/status:
+ *   patch:
+ *     summary: Toggle admin status (SuperAdmin only)
+ *     tags: [Admins]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Admin ID
+ *     responses:
+ *       200:
+ *         description: Admin status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       404:
+ *         description: Admin not found
+ */
 router.patch("/:id/status", async (req, res) => {
   try {
     const admin = await User.findOne({

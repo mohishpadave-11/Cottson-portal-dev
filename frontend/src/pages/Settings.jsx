@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ButtonLoader } from '../components/Loader';
-import api from '../config/axios';
+import { endpoints } from '../config/api';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Settings = () => {
 
   const fetchCustomCharges = async () => {
     try {
-      const response = await api.get('/api/settings/charges');
+      const response = await endpoints.settings.getCharges();
       setChargeTypes(response.data.data || []);
     } catch (error) {
       console.error('Error fetching charges:', error);
@@ -37,7 +37,7 @@ const Settings = () => {
       setChargeTypes(updatedCharges);
       setNewCharge('');
 
-      await api.post('/api/settings/charges', { charges: updatedCharges });
+      await endpoints.settings.updateCharges({ charges: updatedCharges });
     } catch (error) {
       console.error('Error adding charge:', error);
       setChargeTypes(chargeTypes); // Revert
@@ -54,7 +54,7 @@ const Settings = () => {
       const updatedCharges = chargeTypes.filter(c => c !== chargeToRemove);
       setChargeTypes(updatedCharges);
 
-      await api.post('/api/settings/charges', { charges: updatedCharges });
+      await endpoints.settings.updateCharges({ charges: updatedCharges });
     } catch (error) {
       console.error('Error removing charge:', error);
       setChargeTypes(chargeTypes); // Revert

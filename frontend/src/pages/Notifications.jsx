@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader from '../components/Loader';
 
 const Notifications = () => {
@@ -17,8 +17,8 @@ const Notifications = () => {
     try {
       setLoading(true);
       // We are treating "Open" or "Unresolved" complaints as notifications
-      const response = await api.get('/api/complaints');
-      const data = Array.isArray(response.data) ? response.data : [];
+      const response = await endpoints.complaints.getAll();
+      const data = Array.isArray(response.data) ? response.data : (response.data.data || []);
 
       // Filter for new/open complaints and sort by newest first
       // You might want to filter only 'Open' status if resolved ones shouldn't appear
@@ -53,7 +53,7 @@ const Notifications = () => {
   const handleNotificationClick = async (complaintId, isRead) => {
     try {
       if (!isRead) {
-        await api.patch(`/api/complaints/${complaintId}/mark-as-read`);
+        await endpoints.complaints.markAsRead(complaintId);
       }
     } catch (error) {
       console.error('Error marking as read:', error);

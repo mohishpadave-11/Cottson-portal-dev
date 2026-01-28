@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader from '../components/Loader';
 
 const ClientNotifications = () => {
@@ -33,8 +33,8 @@ const ClientNotifications = () => {
 
       // Fetch orders and complaints in parallel
       const [ordersResponse, complaintsResponse] = await Promise.all([
-        api.get('/api/orders', { params: { companyId: user.companyId } }),
-        api.get('/api/complaints')
+        endpoints.orders.getAll({ params: { companyId: user.companyId } }),
+        endpoints.complaints.getAll()
       ]);
 
       const orders = ordersResponse.data.data;
@@ -106,7 +106,7 @@ const ClientNotifications = () => {
     } else if (notification.type === 'complaint') {
       if (!notification.read) {
         try {
-          await api.patch(`/api/complaints/${notification.complaintId}/mark-as-read`);
+          await endpoints.complaints.markAsRead(notification.complaintId);
         } catch (error) {
           console.error('Error marking as read:', error);
         }

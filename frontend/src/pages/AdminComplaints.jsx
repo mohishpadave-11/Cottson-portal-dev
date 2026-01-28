@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader, { ButtonLoader } from '../components/Loader';
 import { useToast } from '../contexts/ToastContext';
 import { COMPLAINT_STATUS, PRIORITY_LEVELS } from '../constants/complaintStatus';
@@ -27,8 +27,8 @@ const AdminComplaints = () => {
     const fetchComplaints = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/complaints');
-            setComplaints(response.data);
+            const { data: responseData } = await endpoints.complaints.getAll();
+            setComplaints(responseData.data || responseData);
         } catch (error) {
             console.error('Error fetching complaints:', error);
             toast.error('Error', 'Failed to load complaints');
@@ -49,7 +49,7 @@ const AdminComplaints = () => {
                 resolvedAt: new Date().toISOString()
             };
 
-            await api.put(`/api/complaints/${selectedComplaint._id}`, updatedComplaint);
+            await endpoints.complaints.update(selectedComplaint._id, updatedComplaint);
 
             toast.success('Success', 'Complaint resolved and client notified');
             fetchComplaints(); // Refresh list
@@ -206,7 +206,7 @@ const AdminComplaints = () => {
                                                         // Mark as read if not already read
                                                         if (!complaint.isReadByAdmin) {
                                                             try {
-                                                                await api.patch(`/api/complaints/${complaint._id}/mark-as-read`);
+                                                                await endpoints.complaints.markAsRead(complaint._id);
                                                                 fetchComplaints(); // Refresh to update read status locally
                                                             } catch (err) {
                                                                 console.error('Failed to mark complaint as read:', err);

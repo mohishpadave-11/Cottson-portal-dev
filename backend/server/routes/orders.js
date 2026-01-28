@@ -32,8 +32,74 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Public routes
+/**
+ * @swagger
+ * /api/orders/next-number:
+ *   get:
+ *     summary: Get next available order number
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Next Order Number
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 nextOrderNumber:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ */
 router.get("/next-number", authenticate, authorize("superadmin", "admin", "manager"), getNextOrderNumber);
+/**
+ * @swagger
+ * /api/orders:
+ *   get:
+ *     summary: Get all orders
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of orders
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Order'
+ *       500:
+ *         description: Server error
+ */
 router.get("/", authenticate, getOrders);
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   get:
+ *     summary: Get order by ID
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Order details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ *       404:
+ *         description: Order not found
+ */
 router.get("/:id", authenticate, getOrderById);
 
 // Protected routes (require authentication)
@@ -51,34 +117,9 @@ router.get("/:id", authenticate, getOrderById);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - client
- *               - company
- *               - products
- *             properties:
- *               client:
- *                 type: string
- *                 description: Client ID
- *               company:
- *                 type: string
- *                 description: Company ID
- *               date:
- *                 type: string
- *                 format: date
- *               products:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     product:
- *                       type: string
- *                     quantity:
- *                       type: number
- *                     price:
- *                       type: number
+ *             $ref: '#/components/schemas/Order'
  *     responses:
- *       200:
+ *       201:
  *         description: Order created successfully
  *         content:
  *           application/json:
@@ -98,22 +139,192 @@ router.get("/:id", authenticate, getOrderById);
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/", authenticate, authorize("superadmin", "admin", "manager"), createOrder);
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   put:
+ *     summary: Update order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Order'
+ *     responses:
+ *       200:
+ *         description: Order updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ *       404:
+ *         description: Order not found
+ */
 router.put("/:id", authenticate, authorize("superadmin", "admin", "manager"), updateOrder);
 router.patch("/:id", authenticate, authorize("superadmin", "admin", "manager"), updateOrder);
+/**
+ * @swagger
+ * /api/orders/{id}/timeline:
+ *   patch:
+ *     summary: Update order timeline
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               timeline:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Timeline updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ */
 router.patch(
   "/:id/timeline",
   authenticate,
   authorize("superadmin", "admin", "manager"),
   updateOrderTimeline
 );
+/**
+ * @swagger
+ * /api/orders/{id}:
+ *   delete:
+ *     summary: Delete order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Order deleted
+ *       404:
+ *         description: Order not found
+ */
 router.delete("/:id", authenticate, authorize("superadmin", "admin"), deleteOrder);
 
 // Payment routes
+// Payment routes
+/**
+ * @swagger
+ * /api/orders/{id}/payments:
+ *   post:
+ *     summary: Add payment to order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *               - date
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *               type:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payment added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ */
 router.post("/:id/payments", authenticate, authorize("superadmin", "admin", "manager"), addPayment);
 router.put("/:id/payments/:paymentId", authenticate, authorize("superadmin", "admin", "manager"), updatePayment);
 router.delete("/:id/payments/:paymentId", authenticate, authorize("superadmin", "admin", "manager"), deletePayment);
 
 // File upload routes
+// File upload routes
+/**
+ * @swagger
+ * /api/orders/{id}/upload-url:
+ *   post:
+ *     summary: Get presigned URL for file upload
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fileName
+ *               - fileType
+ *             properties:
+ *               fileName:
+ *                 type: string
+ *               fileType:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Presigned URL generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url:
+ *                   type: string
+ *                 key:
+ *                   type: string
+ */
 router.post(
   "/:id/upload-url",
   authenticate,
@@ -129,6 +340,50 @@ router.post(
 );
 
 // Synch DB after direct upload
+// Synch DB after direct upload
+/**
+ * @swagger
+ * /api/orders/{id}/documents:
+ *   put:
+ *     summary: Update order documents (after upload)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - documents
+ *             properties:
+ *               documents:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     url:
+ *                       type: string
+ *                     fileType:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Documents updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ */
 router.put(
   "/:id/documents",
   authenticate,
@@ -137,6 +392,35 @@ router.put(
 );
 
 // Notify Client
+// Notify Client
+/**
+ * @swagger
+ * /api/orders/{id}/documents/notify:
+ *   post:
+ *     summary: Notify client about new documents
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Client notified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ */
 router.post(
   "/:id/documents/notify",
   authenticate,
@@ -145,6 +429,47 @@ router.post(
 );
 
 // Document Management
+// Document Management
+/**
+ * @swagger
+ * /api/orders/{orderId}/documents/{docId}/rename:
+ *   patch:
+ *     summary: Rename document
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *       - in: path
+ *         name: docId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Document ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newName
+ *             properties:
+ *               newName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Document renamed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ */
 router.patch(
   "/:orderId/documents/:docId/rename",
   authenticate,
@@ -152,6 +477,35 @@ router.patch(
   renameDocument
 );
 
+/**
+ * @swagger
+ * /api/orders/{orderId}/documents/{docId}:
+ *   delete:
+ *     summary: Delete document
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Order ID
+ *       - in: path
+ *         name: docId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Document ID
+ *     responses:
+ *       200:
+ *         description: Document deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Order'
+ */
 router.delete(
   "/:orderId/documents/:docId",
   authenticate,

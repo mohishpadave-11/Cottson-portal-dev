@@ -1,10 +1,8 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { endpoints } from '../config/api';
 import axios from 'axios';
-import api from '../config/api';
-import companyService from '../services/companyService';
-import clientService from '../services/clientService';
 import Loader, { ButtonLoader } from '../components/Loader';
 import PaymentModal from '../components/PaymentModal';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -98,7 +96,7 @@ const OrderDetails = () => {
 
   const fetchOrder = async () => {
     try {
-      const response = await api.get(`/api/orders/${id}`);
+      const response = await endpoints.orders.getById(id);
       const orderData = response.data.data;
       setOrder(orderData);
 
@@ -126,7 +124,7 @@ const OrderDetails = () => {
 
   const fetchChargeTypes = async () => {
     try {
-      const response = await api.get('/api/settings/charges');
+      const response = await endpoints.settings.getCharges();
       setChargeTypes(response.data.data || []);
     } catch (error) {
       console.error('Error fetching charge types:', error);
@@ -135,8 +133,9 @@ const OrderDetails = () => {
 
   const fetchCompanies = async () => {
     try {
-      const data = await companyService.getAll();
-      setCompanies(data || []);
+      const { data: responseData } = await endpoints.companies.getAll();
+      const data = responseData.data || responseData;
+      setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching companies:', error);
       setCompanies([]);
@@ -145,8 +144,9 @@ const OrderDetails = () => {
 
   const fetchClients = async () => {
     try {
-      const data = await clientService.getAll();
-      setClients(data || []);
+      const { data: responseData } = await endpoints.clients.getAll();
+      const data = responseData.data || responseData;
+      setClients(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching clients:', error);
       setClients([]);
@@ -155,7 +155,7 @@ const OrderDetails = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get('/api/products');
+      const response = await endpoints.products.getAll();
       // Handle both direct array and nested data structure
       const data = response.data.data || response.data;
       setProducts(Array.isArray(data) ? data : []);
@@ -168,9 +168,7 @@ const OrderDetails = () => {
   const fetchNextOrderNumber = async (companyId) => {
     if (!companyId) return;
     try {
-      const response = await api.get('/api/orders/next-number', {
-        params: { companyId }
-      });
+      const response = await endpoints.orders.getNextOrderNumber(companyId);
       if (response.data.success) {
         setFormData(prev => ({
           ...prev,
@@ -250,7 +248,7 @@ const OrderDetails = () => {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         // 1. Get Presigned URL
-        const signResponse = await api.post(`/api/orders/${orderId}/upload-url`, {
+        const signResponse = await endpoints.orders.getUploadUrl(orderId, {
           fileName: doc.file.name,
           fileType: doc.file.type,
           docType: doc.docType
@@ -258,7 +256,7 @@ const OrderDetails = () => {
 
         const { uploadUrl, publicUrl, key } = signResponse.data;
 
-        // 2. Upload to R2 directly
+        // 2. Upload to R2 directly (Use axios to avoid api instance headers on presigned URL)
         await axios.put(uploadUrl, doc.file, {
           headers: {
             'Content-Type': doc.file.type
@@ -266,7 +264,7 @@ const OrderDetails = () => {
         });
 
         // 3. Sync with Backend
-        await api.put(`/api/orders/${orderId}/documents`, {
+        await endpoints.orders.syncDocument(orderId, {
           docType: doc.docType,
           newUrl: publicUrl,
           newKey: key,
@@ -355,7 +353,7 @@ const OrderDetails = () => {
           return;
         }
 
-        const response = await api.post('/api/orders', formData);
+        const response = await endpoints.orders.create(formData);
         const newOrderId = response.data.data._id;
 
         setCreatedOrderId(newOrderId);
@@ -367,7 +365,7 @@ const OrderDetails = () => {
         await processStagedUploads(newOrderId);
 
       } else {
-        await api.put(`/api/orders/${id}`, formData);
+        await endpoints.orders.update(id, formData);
         toast.success('Success', 'Order updated successfully');
         navigate('/orders'); // Added navigation for update success
         setSaving(false);
@@ -390,7 +388,7 @@ const OrderDetails = () => {
     formDataFile.append('docType', docType);
 
     try {
-      await api.post(`/api/orders/${id}/documents`, formDataFile);
+      await endpoints.orders.uploadDocument(id, formDataFile);
       fetchOrder();
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -400,10 +398,10 @@ const OrderDetails = () => {
   const handlePayment = async (paymentData) => {
     try {
       if (selectedPayment) {
-        await api.put(`/api/orders/${id}/payments/${selectedPayment._id}`, paymentData);
+        await endpoints.orders.updatePayment(id, selectedPayment._id, paymentData);
         toast.success('Success', 'Payment updated successfully');
       } else {
-        await api.post(`/api/orders/${id}/payments`, paymentData);
+        await endpoints.orders.addPayment(id, paymentData);
         toast.success('Success', 'Payment recorded successfully');
       }
       setShowPaymentModal(false);
@@ -424,7 +422,7 @@ const OrderDetails = () => {
     if (!paymentToDelete) return;
 
     try {
-      await api.delete(`/api/orders/${id}/payments/${paymentToDelete}`);
+      await endpoints.orders.deletePayment(id, paymentToDelete);
       toast.success('Success', 'Payment deleted successfully');
       fetchOrder();
     } catch (error) {

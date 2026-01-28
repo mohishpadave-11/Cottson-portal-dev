@@ -1,33 +1,46 @@
-import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 
-/**
- * Initialize SuperAdmin on first server start
- * This runs automatically when the server starts
- */
 const initSuperAdmin = async () => {
   try {
-    // Check if SuperAdmin already exists
-    const existingSuperAdmin = await User.findOne({ role: "superadmin" });
+    const email = "yash.mishra@cottson.com";
+    const password = "Cottson@2026";
+    const phone = "+919892297764";
 
-    if (existingSuperAdmin) {
-      return;
+    // Check if SuperAdmin exists
+    let superAdmin = await User.findOne({ email });
+
+    if (superAdmin) {
+      console.log("⚠️ SuperAdmin found. Updating credentials to ensure access...");
+
+      // Force update the password (triggers pre-save hashing)
+      superAdmin.password = password;
+      superAdmin.role = "superadmin"; // Ensure role is correct
+      superAdmin.firstName = "Yash";
+      superAdmin.lastName = "Mishra";
+
+      await superAdmin.save();
+      console.log("✅ SuperAdmin credentials UPDATED successfully.");
+    } else {
+      console.log("⚙️ Creating new SuperAdmin...");
+
+      superAdmin = new User({
+        firstName: "Yash",
+        lastName: "Mishra",
+        email: email,
+        password: password, // Plain text (will be hashed by model)
+        role: "superadmin",
+        status: "active",
+        isActive: true,
+        phone: phone,
+        department: "Administration",
+      });
+
+      await superAdmin.save();
+      console.log("✅ New SuperAdmin CREATED successfully.");
     }
 
-    // Create SuperAdmin with hardcoded credentials
-    const hashedPassword = await bcrypt.hash("Cottson@2026", 10);
+    console.log(`👉 Login with: ${email} | ${password}`);
 
-    const superAdmin = new User({
-      name: "Yash Mishra",
-      email: "yash.mishra@cottson.com",
-      password: hashedPassword,
-      role: "superadmin",
-      status: "active",
-      isActive: true,
-      phone: "+1234567890",
-      department: "Administration",
-    });
-    await superAdmin.save();
   } catch (error) {
     console.error("❌ Error initializing SuperAdmin:", error.message);
   }

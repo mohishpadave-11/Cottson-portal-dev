@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 
 const ChangePassword = () => {
     const navigate = useNavigate();
@@ -46,7 +46,7 @@ const ChangePassword = () => {
         setLoading(true);
 
         try {
-            await api.post('/api/auth/change-password', {
+            await endpoints.auth.changePassword({
                 currentPassword: formData.currentPassword,
                 newPassword: formData.newPassword
             });

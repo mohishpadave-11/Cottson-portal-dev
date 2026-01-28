@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 import { ButtonLoader } from '../components/Loader';
 
@@ -25,18 +25,52 @@ const AdminProfile = () => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       setFormData({
-        name: user.name || '',
+        name: user.fullName || (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.name || ''),
         email: user.email || '',
-        phone: user.phoneNumber || '',
+        phone: user.phoneNumber || user.phone || '',
         role: user.role || '',
-        department: user.department || '', // Assumes these might be added to User schema later
+        department: user.department || '',
         location: user.location || '',
         bio: user.bio || ''
       });
     } catch (e) {
       console.error('Error parsing user data', e);
     }
+
+    // Fetch fresh data
+    const fetchProfile = async () => {
+      try {
+        const response = await endpoints.auth.getMe();
+        if (response.data && response.data.user) {
+          const user = response.data.user;
+          // Update localStorage
+          const stored = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...stored, ...user }));
+
+          setFormData(prev => ({
+            ...prev,
+            name: user.fullName || (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.name || ''),
+            email: user.email || prev.email,
+            phone: user.phoneNumber || user.phone || prev.phone,
+            role: user.role || prev.role,
+            department: user.department || prev.department,
+            location: user.location || prev.location,
+            bio: user.bio || prev.bio
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate('/login');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,8 +94,8 @@ const AdminProfile = () => {
       const updatedUser = { ...currentUser, ...formData, phoneNumber: formData.phone };
       localStorage.setItem('user', JSON.stringify(updatedUser));
 
-      // Call API (Commented out until route confirmed, but adding for completeness)
-      // await api.put('/api/auth/update-profile', formData);
+      // Call API
+      await endpoints.auth.updateProfile(formData);
 
       toast.success('Success', 'Profile updated successfully');
       setIsEditing(false);
@@ -165,7 +199,9 @@ const AdminProfile = () => {
                 </svg>
                 <span className="text-sm font-medium text-gray-700">Privacy Settings</span>
               </button>
-              <button className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-50 rounded-lg transition-colors text-red-600">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-50 rounded-lg transition-colors text-red-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>

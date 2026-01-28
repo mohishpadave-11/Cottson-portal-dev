@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { endpoints } from '../config/api';
 import { ButtonLoader } from '../components/Loader';
 
 const ClientModal = ({ client, onClose, onSave }) => {
@@ -22,7 +22,7 @@ const ClientModal = ({ client, onClose, onSave }) => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('/api/companies');
+      const response = await endpoints.companies.getAll();
       setCompanies(response.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
@@ -41,9 +41,9 @@ const ClientModal = ({ client, onClose, onSave }) => {
     try {
       setSaving(true);
       if (client) {
-        await axios.put(`/api/clients/${client._id}`, formData);
+        await endpoints.clients.update(client._id, formData);
       } else {
-        await axios.post('/api/clients', formData);
+        await endpoints.clients.create(formData);
       }
       onSave();
       onClose();

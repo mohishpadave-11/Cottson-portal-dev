@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { useToast } from '../contexts/ToastContext';
-import orderService from '../services/orderService';
+import { endpoints } from '../config/api';
 import KanbanCard from './molecules/KanbanCard/KanbanCard';
 
 const KanbanBoard = () => {
@@ -64,7 +64,8 @@ const KanbanBoard = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const data = await orderService.getAll();
+      const response = await endpoints.orders.getAll();
+      const data = response.data.data || response.data;
       setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -149,15 +150,15 @@ const KanbanBoard = () => {
     );
 
     // Update order timeline in backend
-    const result = await orderService.updateTimeline(draggedOrder._id, newStage);
+    try {
+      await endpoints.orders.updateTimeline(draggedOrder._id, newStage);
 
-    if (result.success) {
       // Show success notification
       toast.success(
         'Order status updated',
         `Order #${draggedOrder.orderNumber} moved to ${newStage}`
       );
-    } else {
+    } catch (error) {
       // Revert optimistic update on error
       setOrders(prevOrders =>
         prevOrders.map(order =>
@@ -170,7 +171,7 @@ const KanbanBoard = () => {
       // Show error notification
       toast.error(
         'Update failed',
-        result.error || 'Failed to update order status. Please try again.'
+        error.response?.data?.message || 'Failed to update order status. Please try again.'
       );
     }
   };

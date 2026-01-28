@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader, { ButtonLoader } from '../components/Loader';
 import { useToast } from '../contexts/ToastContext';
 
@@ -35,7 +35,7 @@ const AdminDetails = () => {
     const fetchAdmin = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/api/admins/${id}`);
+            const response = await endpoints.admins.getById(id);
             const data = response.data.data || response.data;
             setAdmin(data);
             setFormData({
@@ -67,11 +67,11 @@ const AdminDetails = () => {
             }
 
             if (id === 'new') {
-                await api.post('/api/admins', formData);
+                await endpoints.admins.create(formData);
                 toast.success('Success', 'Admin created successfully');
                 navigate('/admins');
             } else {
-                await api.put(`/api/admins/${id}`, formData);
+                await endpoints.admins.update(id, formData);
                 toast.success('Success', 'Admin updated successfully');
                 // Update local state if staying on page (though standard is usually to navigate or refresh)
                 setAdmin({ ...admin, ...formData });

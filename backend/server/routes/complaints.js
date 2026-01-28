@@ -5,6 +5,26 @@ import { protect as authenticate } from '../middleware/auth.js';
 const router = express.Router();
 
 // Get all complaints
+/**
+ * @swagger
+ * /api/complaints:
+ *   get:
+ *     summary: Get all complaints
+ *     tags: [Complaints]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of complaints
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Complaint'
+ *       500:
+ *         description: Server error
+ */
 router.get('/', authenticate, async (req, res) => {
   try {
     let filter = {};
@@ -22,6 +42,31 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Get complaint by ID
+/**
+ * @swagger
+ * /api/complaints/{id}:
+ *   get:
+ *     summary: Get complaint by ID
+ *     tags: [Complaints]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Complaint ID
+ *     responses:
+ *       200:
+ *         description: Complaint details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Complaint'
+ *       404:
+ *         description: Complaint not found
+ */
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id).populate('orderId');
@@ -44,6 +89,30 @@ import { sendEmail } from '../config/mailer.js';
 // ... existing imports
 
 // Create new complaint
+/**
+ * @swagger
+ * /api/complaints:
+ *   post:
+ *     summary: Create new complaint
+ *     tags: [Complaints]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Complaint'
+ *     responses:
+ *       201:
+ *         description: Complaint created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Complaint'
+ *       400:
+ *         description: Error
+ */
 router.post('/', authenticate, async (req, res) => {
   try {
     const complaintData = { ...req.body };
@@ -85,6 +154,37 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // Update complaint
+/**
+ * @swagger
+ * /api/complaints/{id}:
+ *   put:
+ *     summary: Update complaint
+ *     tags: [Complaints]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Complaint ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Complaint'
+ *     responses:
+ *       200:
+ *         description: Complaint updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Complaint'
+ *       404:
+ *         description: Complaint not found
+ */
 router.put('/:id', async (req, res) => {
   try {
     const complaint = await Complaint.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -119,6 +219,31 @@ router.put('/:id', async (req, res) => {
 });
 
 // Mark complaint as read
+/**
+ * @swagger
+ * /api/complaints/{id}/mark-as-read:
+ *   patch:
+ *     summary: Mark complaint as read
+ *     tags: [Complaints]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Complaint ID
+ *     responses:
+ *       200:
+ *         description: Complaint marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Complaint'
+ *       404:
+ *         description: Complaint not found
+ */
 router.patch('/:id/mark-as-read', authenticate, async (req, res) => {
   try {
     const { role } = req.user;
@@ -138,6 +263,27 @@ router.patch('/:id/mark-as-read', authenticate, async (req, res) => {
 });
 
 // Delete complaint
+/**
+ * @swagger
+ * /api/complaints/{id}:
+ *   delete:
+ *     summary: Delete complaint
+ *     tags: [Complaints]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Complaint ID
+ *     responses:
+ *       200:
+ *         description: Complaint deleted
+ *       404:
+ *         description: Complaint not found
+ */
 router.delete('/:id', async (req, res) => {
   try {
     const complaint = await Complaint.findByIdAndDelete(req.params.id);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader from '../components/Loader';
 
 import { COMPLAINT_STATUS, PRIORITY_LEVELS } from '../constants/complaintStatus';
@@ -40,12 +40,15 @@ const ClientComplaints = () => {
       const user = JSON.parse(userStr);
 
       const [complaintsRes, ordersRes] = await Promise.all([
-        api.get('/api/complaints'),
-        api.get('/api/orders', { params: { companyId: user.companyId } })
+        endpoints.complaints.getAll(),
+        endpoints.orders.getAll({ params: { companyId: user.companyId } })
       ]);
 
-      setComplaints(complaintsRes.data);
-      setOrders(ordersRes.data.data);
+      const complaintsData = complaintsRes.data.data || complaintsRes.data;
+      const ordersData = ordersRes.data.data || ordersRes.data;
+
+      setComplaints(complaintsData);
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -65,17 +68,18 @@ const ClientComplaints = () => {
       const complaintData = {
         ...formData,
         clientId: user._id,
-        clientName: user.name || (user.firstName + ' ' + user.lastName),
+        clientName: user.fullName || (user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.name),
         clientEmail: user.email,
         status: COMPLAINT_STATUS.OPEN
       };
 
-      await api.post('/api/complaints', complaintData);
+      await endpoints.complaints.create(complaintData);
       setSuccessMessage('Complaint submitted successfully! Our team will review it shortly.');
 
       // Refresh list
-      const res = await api.get('/api/complaints');
-      setComplaints(res.data);
+      const res = await endpoints.complaints.getAll();
+      const resData = res.data.data || res.data;
+      setComplaints(resData);
 
       // Reset form
       setFormData({

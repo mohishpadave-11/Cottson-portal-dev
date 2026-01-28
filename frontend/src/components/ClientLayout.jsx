@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Footer from './Footer';
 
 const ClientLayout = ({ children }) => {
@@ -11,6 +11,13 @@ const ClientLayout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [clientInfo, setClientInfo] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     // Get user from localStorage
@@ -34,8 +41,8 @@ const ClientLayout = ({ children }) => {
   const fetchUnreadCount = async (user) => {
     try {
       const [ordersResponse, complaintsResponse] = await Promise.all([
-        api.get('/api/orders', { params: { companyId: user.companyId } }),
-        api.get('/api/complaints')
+        endpoints.orders.getAll({ params: { companyId: user.companyId } }),
+        endpoints.complaints.getAll()
       ]);
 
       const recentOrders = ordersResponse.data.data.filter(order => {
@@ -61,7 +68,9 @@ const ClientLayout = ({ children }) => {
   };
 
   const handleLogout = () => {
-    navigate('/logout');
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate('/login');
   };
 
   const navItems = [
@@ -127,7 +136,7 @@ const ClientLayout = ({ children }) => {
             <div className="flex items-center justify-center">
               <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
                 <img
-                  src="/transparentfavicon.jpeg"
+                  src="/favicondark.jpeg"
                   alt="Logo"
                   className="w-full h-full object-contain"
                 />
@@ -136,16 +145,16 @@ const ClientLayout = ({ children }) => {
           ) : (
             <div className="flex items-center justify-center">
               <img
-                src="/transparentlogo.jpeg"
+                src="/trans.png"
                 alt="Client Portal Logo"
-                className="h-20 max-w-[200px] w-auto object-contain"
+                className="h-32 w-auto max-w-full object-contain"
               />
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden no-scrollbar">
           {navItems.map(item => (
             <Link
               key={item.path}
@@ -166,11 +175,11 @@ const ClientLayout = ({ children }) => {
         <div className="p-4 border-t border-slate-700">
           <div className={`flex items-center ${(sidebarCollapsed && !mobileMenuOpen) ? 'justify-center' : 'space-x-3'} px-2 py-2 rounded-lg`}>
             <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold shadow-lg flex-shrink-0">
-              {clientInfo?.name?.charAt(0).toUpperCase() || 'C'}
+              {(clientInfo?.fullName || clientInfo?.firstName || 'C').charAt(0).toUpperCase()}
             </div>
             {(!sidebarCollapsed || mobileMenuOpen) && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{clientInfo?.name || 'Client'}</p>
+                <p className="text-sm font-medium text-white truncate">{clientInfo?.fullName || clientInfo?.firstName || 'Client'}</p>
                 <p className="text-xs text-slate-400 truncate">Client Portal</p>
               </div>
             )}
@@ -206,7 +215,7 @@ const ClientLayout = ({ children }) => {
 
             <div className="flex-1 lg:flex-none">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                Welcome back, {clientInfo?.name || 'Client'}
+                Welcome back, {clientInfo?.fullName || clientInfo?.firstName || 'Client'}
               </h2>
               <p className="text-xs sm:text-sm text-gray-500 mt-1 hidden sm:block">
                 {location.pathname === '/client/orders' && `${getGreeting()}! View and track all your orders here.`}
@@ -222,6 +231,9 @@ const ClientLayout = ({ children }) => {
                 <input
                   type="text"
                   placeholder="Search your orders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearch}
                   className="w-48 lg:w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

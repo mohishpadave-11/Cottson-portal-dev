@@ -191,7 +191,10 @@ class AuthService {
           id: user._id,
           email: user.email,
           role: user.role,
-          name: user.name,
+          name: user.fullName || `${user.firstName} ${user.lastName || ''}`.trim(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: user.fullName,
           companyId: user.companyId,
           companyName: user.companyId?.companyName
         }

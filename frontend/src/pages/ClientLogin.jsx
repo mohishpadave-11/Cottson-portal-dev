@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { endpoints } from '../config/api';
 
 const ClientLogin = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const ClientLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/clients/login', formData);
+      const response = await endpoints.clients.login(formData);
 
       // Store client info in localStorage - Using standard keys to match main login
       localStorage.setItem('user', JSON.stringify(response.data.client));

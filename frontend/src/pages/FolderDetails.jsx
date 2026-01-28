@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import orderService from '../services/orderService';
+import { endpoints } from '../config/api';
 import Loader from '../components/Loader';
 // import { dummyOrders } from '../data/dummyData';
 
@@ -23,8 +23,9 @@ const FolderDetails = () => {
   const fetchCompanyOrders = async () => {
     try {
       setLoading(true);
-      const allOrders = await orderService.getAll();
-      const companyOrders = (allOrders || []).filter(order => order.companyId?._id === id || order.companyId === id);
+      const { data: responseData } = await endpoints.orders.getAll();
+      const allOrders = responseData.data || responseData;
+      const companyOrders = (Array.isArray(allOrders) ? allOrders : []).filter(order => order.companyId?._id === id || order.companyId === id);
       setOrders(companyOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -42,7 +43,8 @@ const FolderDetails = () => {
   const handleOrderClick = async (order) => {
     try {
       // Fetch full order details with all populated fields
-      const fullOrderData = await orderService.getById(order._id);
+      const response = await endpoints.orders.getById(order._id);
+      const fullOrderData = response.data.data || response.data;
       setSelectedOrder(fullOrderData);
       setActiveTab('details');
     } catch (error) {

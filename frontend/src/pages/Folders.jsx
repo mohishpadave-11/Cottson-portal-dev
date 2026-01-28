@@ -1,9 +1,8 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import companyService from '../services/companyService';
+import { endpoints } from '../config/api';
 import Loader from '../components/Loader';
-// import { dummyCompanies } from '../data/dummyData';
 
 const Folders = () => {
   const navigate = useNavigate();
@@ -18,8 +17,9 @@ const Folders = () => {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const data = await companyService.getAll();
-      setCompanies(data || []);
+      const { data: responseData } = await endpoints.companies.getAll();
+      const data = responseData.data || responseData;
+      setCompanies(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching companies:', error);
       setCompanies([]);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader from '../components/Loader';
 
 const ClientOrderDetails = () => {
@@ -17,7 +17,7 @@ const ClientOrderDetails = () => {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/orders/${id}`);
+      const response = await endpoints.orders.getById(id);
 
       const userStr = localStorage.getItem('user');
 

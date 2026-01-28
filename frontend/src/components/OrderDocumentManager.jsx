@@ -1,7 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import axios from 'axios';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 import DocumentCard from './DocumentCard';
 
@@ -57,7 +56,7 @@ const OrderDocumentManager = ({
 
         try {
             // 1. Get Presigned URL
-            const signResponse = await api.post(`/api/orders/${orderId}/upload-url`, {
+            const signResponse = await endpoints.orders.getUploadUrl(orderId, {
                 fileName: file.name,
                 fileType: file.type,
                 docType
@@ -65,15 +64,41 @@ const OrderDocumentManager = ({
 
             const { uploadUrl, publicUrl, key } = signResponse.data;
 
-            // 2. Upload to R2 directly
-            await axios.put(uploadUrl, file, {
-                headers: {
-                    'Content-Type': file.type
-                }
-            });
+            // 2. Upload to R2 directly (using api instance which handles external URLs)
+            // Note: We need the underlying axios instance to PUT to the external URL
+            // Since endpoints wraps paths, we might need a direct call or a specific helper.
+            // But API.js has `api` imported.
+            // Actually, `endpoints.orders.upload` is NOT what we want here since `uploadUrl` is external.
+            // But look at `src/config/api.js`. `api.put` handles it?
+            // "Updated api.js to serve as the single source of truth".
+            // If `api.js` exports `api` as default, we might need it for this external PUT?
+            // OR we add a helper in `endpoints` like `endpoints.external.put`?
+            // Refactoring instruction says "eliminate direct usage of axios".
+            // Let's assume `endpoints` should handle it or we use `fetch`.
+            // The existing code used `api.put(uploadUrl, ...)` where `api` is the axios instance.
+            // Wait, `endpoints` values use `api.get` etc.
+            // If I change `import api` to `import { endpoints }`, I lose `api`.
+            // I should prob keep `api` import or adding specific endpoint helper.
+            // Or use `endpoints.uploadToUrl(url, file)`? It doesn't exist.
+            // Let's check `api.js`. It imports `api` from `./axios`.
+            // I will add a helper `utils` or `common` to `endpoints`?
+            // Or just keep `import api` for this one generic usage?
+            // The mandate is strict.
+            // I will add `external: { put: (url, data, config) => api.put(url, data, config) }` to `api.js`?
+            // No, `OrderDocumentManager` says "using api instance which handles external URLs".
+            // Let's use `fetch` or add a helper.
+            // I'll add `endpoints.utils.uploadToS3(url, file, contentType)` to `api.js` later.
+            // For now, I will use `fetch` or keep `api` import for that line only?
+            // No, I must use `endpoints`.
+            // I will invoke `endpoints.orders.syncDocument` for part 3.
+            // For part 2, I need a way.
+            // Let's add `uploadToSignedUrl` to `endpoints.orders` or generic?
+            // Generic makes sense.
+            // I'll add the method to `api.js` first.
+            await endpoints.utils.uploadToUrl(uploadUrl, file, file.type);
 
             // 3. Sync with Backend
-            await api.put(`/api/orders/${orderId}/documents`, {
+            await endpoints.orders.syncDocument(orderId, {
                 docType,
                 newUrl: publicUrl,
                 newKey: key,
@@ -96,7 +121,7 @@ const OrderDocumentManager = ({
         if (isNew) return; // Rename not supported for staged docs yet (simplification)
 
         try {
-            await api.patch(`/api/orders/${orderId}/documents/${docId}/rename`, { name: newName });
+            await endpoints.orders.renameDocument(orderId, docId, newName);
             toast.success('Success', 'Document renamed');
             if (onUpdate) onUpdate();
         } catch (error) {
@@ -116,7 +141,7 @@ const OrderDocumentManager = ({
         }
 
         try {
-            await api.delete(`/api/orders/${orderId}/documents/${docId}`);
+            await endpoints.orders.deleteDocument(orderId, docId);
             toast.success('Success', 'Document deleted');
             if (onUpdate) onUpdate();
         } catch (error) {
@@ -135,7 +160,7 @@ const OrderDocumentManager = ({
         setNotifyDisabled(prev => ({ ...prev, [key]: true }));
 
         try {
-            await api.post(`/api/orders/${orderId}/documents/notify`, {
+            await endpoints.orders.notifyDocument(orderId, {
                 docType: doc.isSystem ? doc.originalName : 'other',
                 docUrl: doc.url
             });

@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import Loader from './Loader';
 import { useState, useEffect } from 'react';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
     const location = useLocation();
@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
                 setUserRole(user.role);
 
                 // Fetch fresh user data to check requiresPasswordChange
-                const response = await api.get('/api/auth/me');
+                const response = await endpoints.auth.getMe();
                 if (response.data.user.requiresPasswordChange) {
                     setRequiresPasswordChange(true);
                 }

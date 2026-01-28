@@ -2,8 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '../components/Pagination';
-import orderService from '../services/orderService';
-import companyService from '../services/companyService';
+import { endpoints } from '../config/api';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { useToast } from '../contexts/ToastContext';
 
@@ -37,7 +36,8 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const data = await orderService.getAll();
+      const { data: responseData } = await endpoints.orders.getAll();
+      const data = responseData.data || responseData;
       const ordersArray = Array.isArray(data) ? data : [];
       setOrders(ordersArray);
       setFilteredOrders(ordersArray);
@@ -50,7 +50,8 @@ const Orders = () => {
 
   const fetchCompanies = async () => {
     try {
-      const data = await companyService.getAll();
+      const { data: responseData } = await endpoints.companies.getAll();
+      const data = responseData.data || responseData;
       const companiesArray = Array.isArray(data) ? data : [];
       setCompanies(companiesArray);
     } catch (error) {
@@ -115,16 +116,12 @@ const Orders = () => {
 
     setIsDeleting(true);
     try {
-      const result = await orderService.delete(orderToDelete._id);
-      if (result.success) {
-        toast.success('Success', 'Order deleted successfully');
-        fetchOrders(); // Refresh list
-      } else {
-        toast.error('Error', result.error || 'Failed to delete order');
-      }
+      await endpoints.orders.delete(orderToDelete._id);
+      toast.success('Success', 'Order deleted successfully');
+      fetchOrders(); // Refresh list
     } catch (error) {
       console.error('Error deleting order:', error);
-      toast.error('Error', 'An unexpected error occurred');
+      toast.error('Error', error.response?.data?.message || 'Failed to delete order');
     } finally {
       setIsDeleting(false);
       setIsDeleteModalOpen(false);

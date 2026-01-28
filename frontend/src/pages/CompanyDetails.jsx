@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Loader, { ButtonLoader } from '../components/Loader';
 import CompanyAddressManager from '../components/CompanyAddressManager';
-import companyService from '../services/companyService';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 
 const CompanyDetails = () => {
@@ -34,7 +34,8 @@ const CompanyDetails = () => {
   const fetchCompany = async () => {
     try {
       setLoading(true);
-      const data = await companyService.getById(id);
+      const response = await endpoints.companies.getById(id);
+      const data = response.data.data || response.data;
       setCompany(data);
       setFormData(data);
     } catch (error) {
@@ -56,26 +57,22 @@ const CompanyDetails = () => {
 
     try {
       setSaving(true);
-      let result;
 
       if (id === 'new') {
-        result = await companyService.create(formData);
+        await endpoints.companies.create(formData);
       } else {
-        result = await companyService.update(id, formData);
+        await endpoints.companies.update(id, formData);
       }
 
-      if (result.success) {
-        toast.success(
-          'Success',
-          id === 'new' ? 'Company created successfully' : 'Company updated successfully'
-        );
-        navigate('/companies');
-      } else {
-        toast.error('Error', result.error);
-      }
+      toast.success(
+        'Success',
+        id === 'new' ? 'Company created successfully' : 'Company updated successfully'
+      );
+      navigate('/companies');
+
     } catch (error) {
       console.error('Error saving company:', error);
-      toast.error('Error', 'Failed to save company');
+      toast.error('Error', error.response?.data?.message || 'Failed to save company');
     } finally {
       setSaving(false);
     }

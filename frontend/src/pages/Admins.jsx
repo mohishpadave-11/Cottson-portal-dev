@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 import Pagination from '../components/Pagination';
 import { TableLoader } from '../components/Loader';
@@ -30,7 +30,7 @@ const Admins = () => {
     const fetchAdmins = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/api/auth/users?role=admin');
+            const response = await endpoints.auth.getUsers({ role: 'admin' });
             setAdmins(response.data.users || []);
         } catch (error) {
             console.error('Error fetching admins:', error);
@@ -50,7 +50,7 @@ const Admins = () => {
 
         try {
             setIsDeleting(true);
-            await api.delete(`/api/auth/delete-user/${adminToDelete._id}`);
+            await endpoints.auth.deleteUser(adminToDelete._id);
             toast.success('Success', 'Admin deleted successfully');
             fetchAdmins();
             setDeleteModalOpen(false);

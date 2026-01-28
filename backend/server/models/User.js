@@ -3,26 +3,44 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    // User basic info (common to all roles)
+    // === AUTHENTICATION ===
     email: {
       type: String,
       required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please provide a valid email",
-      ],
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"], // Simplified regex
     },
     password: {
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // Don't return password by default
+      select: false,
     },
 
-    // Role and status
+    // === IDENTITY ===
+    // Unified Name Strategy: Everyone uses firstName/lastName
+    firstName: {
+      type: String,
+      trim: true,
+      required: [true, "First Name is required"],
+    },
+    lastName: {
+      type: String,
+      trim: true,
+    },
+    // Unified Phone Strategy
+    phone: {
+      type: String,
+      trim: true,
+    },
+    avatar: String,
+    department: String,
+    location: String,
+    bio: String,
+
+    // === ROLES & PERMISSIONS ===
     role: {
       type: String,
       enum: ["superadmin", "admin", "client"],
@@ -33,82 +51,36 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "inactive", "suspended"],
       default: "active",
     },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-
-    // User metadata
-    lastLogin: Date,
-    permissions: [String],
-    notes: String,
-
-    // Password reset
-    resetPasswordToken: String,
-    resetPasswordExpire: Date,
-    requiresPasswordChange: {
-      type: Boolean,
-      default: false,
-    },
-
-    // Fields for admin/manager role
-    name: {
-      type: String,
-      trim: true,
-    },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    department: {
-      type: String,
-      trim: true,
-    },
-    profileImage: String,
-    avatar: String,
-
-    // Fields for regular users
-    firstName: {
-      type: String,
-      trim: true,
-      minlength: [2, "First name must be at least 2 characters"],
-    },
-    lastName: {
-      type: String,
-      trim: true,
-      minlength: [2, "Last name must be at least 2 characters"],
-    },
-
-    // Fields for client role
-    phoneNumber: {
-      type: String,
-      match: [/^[0-9]{10,}$/, "Please provide a valid phone number"],
-    },
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
+      // Only required if role is 'client' - can be enforced in controller
     },
-    address: {
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String,
-    },
+
+    // === METADATA ===
+    lastLogin: Date,
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true }, // Ensure virtuals are sent to frontend
+    toObject: { virtuals: true }
+  }
 );
 
-// Indexes for faster queries
-// userSchema.index({ email: 1 });
-userSchema.index({ companyId: 1 });
-userSchema.index({ role: 1 });
+// Virtual for Full Name
+userSchema.virtual('fullName').get(function () {
+  return `${this.firstName} ${this.lastName || ''}`.trim();
+});
 
-// Hash password before saving
+// Indexes
+// Indexes
+userSchema.index({ companyId: 1 }); // Critical for filtering clients
+
+// Hash password
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+  if (!this.isModified("password")) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);
@@ -119,23 +91,15 @@ userSchema.pre("save", async function (next) {
   }
 });
 
-// Generate avatar initials if name provided and avatar not set
+// Auto-generate avatar
 userSchema.pre("save", function (next) {
-  if (!this.avatar) {
-    if (this.name) {
-      this.avatar = this.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase();
-    } else if (this.firstName && this.lastName) {
-      this.avatar = (this.firstName[0] + this.lastName[0]).toUpperCase();
-    }
+  if (!this.avatar && this.firstName) {
+    const lastInitial = this.lastName ? this.lastName[0] : "";
+    this.avatar = (this.firstName[0] + lastInitial).toUpperCase();
   }
   next();
 });
 
-// Method to compare password
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

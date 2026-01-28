@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Footer from './Footer';
 
 const Layout = ({ children }) => {
@@ -11,6 +11,13 @@ const Layout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -43,7 +50,7 @@ const Layout = ({ children }) => {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await api.get('/api/complaints');
+      const response = await endpoints.complaints.getAll();
       // Count complaints not read by admin AND still active
       const unread = response?.data?.filter(c =>
         !c.isReadByAdmin &&
@@ -58,7 +65,16 @@ const Layout = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       // Use global timeout (60s) for status checks to handle cold starts
-      await api.get('/api/auth/me');
+      const response = await endpoints.auth.getMe();
+      if (response && response.data && response.data.user) {
+        // Update state and localStorage with fresh data
+        const freshUser = response.data.user;
+        setUser(freshUser); // Update state directly
+
+        // Update localStorage with merged data to preserve any client-side only fields if any
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...currentUser, ...freshUser }));
+      }
     } catch (error) {
       // If 401/403, the interceptor in api.js will handle the redirect
       // But we can double check here
@@ -82,6 +98,12 @@ const Layout = ({ children }) => {
   const getUserInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    navigate('/login');
   };
 
   const navItems = [
@@ -231,7 +253,7 @@ const Layout = ({ children }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden no-scrollbar">
           {navItems.map(item => (
             <Link
               key={item.path}
@@ -255,13 +277,13 @@ const Layout = ({ children }) => {
             className={`flex items-center ${(sidebarCollapsed && !mobileMenuOpen) ? 'justify-center' : 'space-x-3'} px-2 py-2 rounded-lg hover:bg-slate-700/50 cursor-pointer transition-colors`}
           >
             <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold shadow-lg flex-shrink-0">
-              {getUserInitials(user?.name)}
+              {getUserInitials(user?.fullName || user?.firstName)}
             </div>
             {(!sidebarCollapsed || mobileMenuOpen) && (
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
+                    <p className="text-sm font-medium text-white truncate">{user?.fullName || user?.firstName || 'User'}</p>
                     <p className="text-xs text-slate-400 capitalize truncate">{user?.role || 'Guest'}</p>
                   </div>
                   <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +297,7 @@ const Layout = ({ children }) => {
           {/* Logout Button */}
           {(!sidebarCollapsed || mobileMenuOpen) && (
             <button
-              onClick={() => navigate('/logout')}
+              onClick={handleLogout}
               className="w-full mt-2 px-4 py-2 text-sm text-slate-300 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,7 +329,7 @@ const Layout = ({ children }) => {
 
             <div className="flex-1 lg:flex-none">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                Welcome back, {user?.name || 'User'}
+                Welcome back, {user?.fullName || user?.firstName || 'User'}
               </h2>
               <p className="text-xs sm:text-sm text-gray-500 mt-1 hidden sm:block">
                 {location.pathname === '/' && `${getGreeting()}! Here's what's happening with your orders today.`}
@@ -329,6 +351,9 @@ const Layout = ({ children }) => {
                 <input
                   type="text"
                   placeholder="Search orders, clients, or fabrics..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearch}
                   className="w-48 lg:w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 
 const ForgotPassword = () => {
     const [searchParams] = useSearchParams();
@@ -20,7 +20,7 @@ const ForgotPassword = () => {
         setMessage('');
 
         try {
-            const response = await api.post('/api/auth/forgot-password', { email });
+            const response = await endpoints.auth.forgotPassword({ email });
             setStatus('success');
             setMessage(response.data.message || 'Password reset link sent to your email.');
         } catch (err) {

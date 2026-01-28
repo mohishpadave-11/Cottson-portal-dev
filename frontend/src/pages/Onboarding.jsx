@@ -1,8 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import api from '../config/api';
-import companyService from '../services/companyService';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 
 const Onboarding = () => {
@@ -28,8 +27,9 @@ const Onboarding = () => {
 
     const fetchCompanies = async () => {
         try {
-            const data = await companyService.getAll();
-            setCompanies(data || []);
+            const { data: responseData } = await endpoints.companies.getAll();
+            const data = responseData.data || responseData;
+            setCompanies(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Failed to fetch companies');
             setCompanies([]);
@@ -61,7 +61,7 @@ const Onboarding = () => {
 
     const fetchNextCompanyId = async (name) => {
         try {
-            const response = await api.get(`/api/companies/next-id?name=${encodeURIComponent(name)}`);
+            const response = await endpoints.companies.getNextId(name);
             if (response.data.success) {
                 setCompanyForm(prev => ({ ...prev, companyId: response.data.nextId }));
             }
@@ -91,21 +91,17 @@ const Onboarding = () => {
 
         setLoading(true);
         try {
-            const result = await companyService.create(companyForm);
-            if (result.success) {
-                toast.success('Success', 'Company created successfully');
-                setCompanyForm({
-                    companyName: '',
-                    tradeName: '',
-                    gstNumber: '',
-                    billingAddress: '',
-                    companyId: '',
-                    contactEmail: '',
-                    contactPhone: ''
-                });
-            } else {
-                toast.error('Error', result.error || 'Failed to create company');
-            }
+            await endpoints.companies.create(companyForm);
+            toast.success('Success', 'Company created successfully');
+            setCompanyForm({
+                companyName: '',
+                tradeName: '',
+                gstNumber: '',
+                billingAddress: '',
+                companyId: '',
+                contactEmail: '',
+                contactPhone: ''
+            });
         } catch (error) {
             console.error(error);
             toast.error('Error', 'An unexpected error occurred');
@@ -125,8 +121,7 @@ const Onboarding = () => {
 
         setLoading(true);
         try {
-            // Use api instance which handles base URL and auth tokens
-            await api.post('/api/auth/create-client', clientForm);
+            await endpoints.auth.createClient(clientForm);
             toast.success('Success', 'Client created & credentials sent');
             setClientForm({ name: '', email: '', phoneNumber: '', companyId: '' });
         } catch (error) {
@@ -147,8 +142,7 @@ const Onboarding = () => {
 
         setLoading(true);
         try {
-            // Use api instance which handles base URL and auth tokens
-            await api.post('/api/auth/create-admin', adminForm);
+            await endpoints.auth.createAdmin(adminForm);
             toast.success('Success', 'Admin created & credentials sent');
             setAdminForm({ name: '', email: '', phoneNumber: '' });
         } catch (error) {

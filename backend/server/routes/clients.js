@@ -5,6 +5,26 @@ import User from '../models/User.js';
 const router = express.Router();
 
 // Get all clients
+/**
+ * @swagger
+ * /api/clients:
+ *   get:
+ *     summary: Get all clients
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of clients
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Client'
+ *       500:
+ *         description: Server error
+ */
 router.get('/', async (req, res) => {
   try {
     const clients = await Client.find()
@@ -23,6 +43,31 @@ router.get('/', async (req, res) => {
 });
 
 // Get client by ID
+/**
+ * @swagger
+ * /api/clients/{id}:
+ *   get:
+ *     summary: Get client by ID
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Client ID
+ *     responses:
+ *       200:
+ *         description: Client details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Client'
+ *       404:
+ *         description: Client not found
+ */
 router.get('/:id', async (req, res) => {
   try {
     const client = await Client.findById(req.params.id).populate('companyId');
@@ -43,6 +88,30 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new client
+/**
+ * @swagger
+ * /api/clients:
+ *   post:
+ *     summary: Create new client
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Client'
+ *     responses:
+ *       201:
+ *         description: Client created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Client'
+ *       400:
+ *         description: Validation error
+ */
 router.post('/', async (req, res) => {
   try {
     const client = new Client(req.body);
@@ -55,6 +124,37 @@ router.post('/', async (req, res) => {
 });
 
 // Update client
+/**
+ * @swagger
+ * /api/clients/{id}:
+ *   put:
+ *     summary: Update client
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Client ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Client'
+ *     responses:
+ *       200:
+ *         description: Client updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Client'
+ *       404:
+ *         description: Client not found
+ */
 router.put('/:id', async (req, res) => {
   try {
     const client = await Client.findByIdAndUpdate(
@@ -84,6 +184,34 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete client (and associated user account)
+/**
+ * @swagger
+ * /api/clients/{id}:
+ *   delete:
+ *     summary: Delete client
+ *     tags: [Clients]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Client ID
+ *     responses:
+ *       200:
+ *         description: Client deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Client not found
+ */
 router.delete('/:id', async (req, res) => {
   try {
     // First, find the client to get the userId

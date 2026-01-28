@@ -1,7 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import collectionService from '../services/collectionService';
-import productService from '../services/productService';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 import Loader from '../components/Loader';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -51,8 +50,9 @@ const Products = () => {
     const fetchCollections = async () => {
         try {
             setLoading(true);
-            const data = await collectionService.getAll();
-            setCollections(data || []);
+            const { data: responseData } = await endpoints.collections.getAll();
+            const data = responseData.data || responseData;
+            setCollections(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error('Error', 'Failed to fetch collections');
         } finally {
@@ -63,8 +63,9 @@ const Products = () => {
     const fetchProducts = async (collectionId) => {
         try {
             setLoading(true);
-            const data = await productService.getAll({ collectionId });
-            setProducts(data || []);
+            const { data: responseData } = await endpoints.products.getAll({ collectionId });
+            const data = responseData.data || responseData;
+            setProducts(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error('Error', 'Failed to fetch products');
         } finally {
@@ -75,7 +76,7 @@ const Products = () => {
     const handleCreateCollection = async (e) => {
         e.preventDefault();
         try {
-            await collectionService.create(collectionForm);
+            await endpoints.collections.create(collectionForm);
             toast.success('Success', 'Collection created successfully');
             setShowCollectionModal(false);
             setCollectionForm({ name: '', description: '' });
@@ -89,10 +90,10 @@ const Products = () => {
         e.preventDefault();
         try {
             if (isEditingProduct) {
-                await productService.update(selectedProductId, productForm);
+                await endpoints.products.update(selectedProductId, productForm);
                 toast.success('Success', 'Product updated successfully');
             } else {
-                await productService.create({
+                await endpoints.products.create({
                     ...productForm,
                     collectionId: selectedCollection._id
                 });
@@ -136,7 +137,7 @@ const Products = () => {
 
         try {
             setIsDeleting(true);
-            await productService.delete(productToDelete._id);
+            await endpoints.products.delete(productToDelete._id);
             toast.success('Success', 'Product deleted successfully');
             fetchProducts(selectedCollection._id);
             setDeleteModalOpen(false);
@@ -215,7 +216,7 @@ const Products = () => {
 
             {view === 'collections' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {collections.map(collection => (
+                    {Array.isArray(collections) && collections.map(collection => (
                         <div
                             key={collection._id}
                             onClick={() => handleViewCollection(collection)}
@@ -246,7 +247,7 @@ const Products = () => {
                         </div>
                     ))}
 
-                    {collections.length === 0 && (
+                    {Array.isArray(collections) && collections.length === 0 && (
                         <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border-dashed border-2 border-gray-300">
                             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />

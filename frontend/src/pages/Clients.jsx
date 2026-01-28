@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
 import Pagination from '../components/Pagination';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -42,7 +42,7 @@ const Clients = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await api.get('/api/clients');
+      const response = await endpoints.clients.getAll();
       setClients(response.data);
       setFilteredClients(response.data);
     } catch (error) {
@@ -72,7 +72,7 @@ const Clients = () => {
 
     try {
       setIsDeleting(true);
-      await api.delete(`/api/clients/${clientToDelete._id}`);
+      await endpoints.clients.delete(clientToDelete._id);
       toast.success('Success', 'Client deleted successfully');
       await fetchClients();
       setDeleteModalOpen(false);
@@ -102,7 +102,7 @@ const Clients = () => {
 
     try {
       setIsResetting(true);
-      await api.post(`/api/auth/reset-user-password/${clientToReset.userId}`, {});
+      await endpoints.auth.resetUserPassword(clientToReset.userId, {});
       toast.success('Success', `New credentials sent to ${clientToReset.name}`);
       setResetModalOpen(false);
       setClientToReset(null);

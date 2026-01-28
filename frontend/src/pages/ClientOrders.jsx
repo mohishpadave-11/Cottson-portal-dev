@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Pagination from '../components/Pagination';
 import Loader from '../components/Loader';
 
@@ -39,7 +39,7 @@ const ClientOrders = () => {
       const user = JSON.parse(userStr);
 
       // Fetch orders for this client's company
-      const response = await api.get('/api/orders', {
+      const response = await endpoints.orders.getAll({
         params: {
           companyId: user.companyId
         }
@@ -223,10 +223,10 @@ const ClientOrders = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">₹{order.priceWithGst.toLocaleString()}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase whitespace-nowrap ${order.paymentStatus === 'Full Settlement' ? 'bg-[#d4edda] text-[#155724]' :
-                          order.paymentStatus === 'Advance Pending' ? 'bg-[#f8d7da] text-[#721c24]' :
-                            order.paymentStatus === 'Balance Pending' ? 'bg-[#fff3cd] text-[#856404]' :
-                              order.paymentStatus === 'Cancelled' ? 'bg-[#721c24] text-white' :
-                                'bg-gray-100 text-gray-800'
+                        order.paymentStatus === 'Advance Pending' ? 'bg-[#f8d7da] text-[#721c24]' :
+                          order.paymentStatus === 'Balance Pending' ? 'bg-[#fff3cd] text-[#856404]' :
+                            order.paymentStatus === 'Cancelled' ? 'bg-[#721c24] text-white' :
+                              'bg-gray-100 text-gray-800'
                         }`}>
                         {order.paymentStatus}
                       </span>

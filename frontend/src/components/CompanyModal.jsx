@@ -1,4 +1,5 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { endpoints } from '../config/api';
 import CompanyAddressManager from './CompanyAddressManager';
 
 const CompanyModal = ({ company, onClose, onSave }) => {
@@ -32,7 +33,7 @@ const CompanyModal = ({ company, onClose, onSave }) => {
 
   const fetchNextId = async (name) => {
     try {
-      const response = await api.get(`/api/companies/next-id?name=${encodeURIComponent(name)}`);
+      const response = await endpoints.companies.getNextId(name);
       if (response.data.success) {
         setFormData(prev => ({ ...prev, companyId: response.data.nextId }));
       }
@@ -48,9 +49,9 @@ const CompanyModal = ({ company, onClose, onSave }) => {
     try {
       setSaving(true);
       if (company) {
-        await axios.put(`/api/companies/${company._id}`, formData);
+        await endpoints.companies.update(company._id, formData);
       } else {
-        await axios.post('/api/companies', formData);
+        await endpoints.companies.create(formData);
       }
       onSave();
       onClose();

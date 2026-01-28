@@ -19,6 +19,7 @@ import statsRoutes from "./routes/stats.js";
 import uploadRoutes from "./routes/upload.js";
 import notificationRoutes from "./routes/notifications.js";
 import settingsRoutes from "./routes/settings.js";
+import searchRoutes from "./routes/search.js";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpecs from "./config/swagger.js";
 
@@ -140,6 +141,7 @@ app.use("/api/stats", statsRoutes); // Statistics
 app.use("/api/upload", uploadRoutes); // Direct Uploads
 app.use("/api/notifications", notificationRoutes); // Notifications
 app.use("/api/settings", settingsRoutes); // Settings
+app.use("/api/search", searchRoutes); // Global Search
 
 
 // Swagger API Documentation

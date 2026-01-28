@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { endpoints } from '../config/api';
 import Loader, { ButtonLoader } from '../components/Loader';
 import { useToast } from '../contexts/ToastContext';
 
@@ -39,7 +39,7 @@ const ClientDetails = () => {
 
   const fetchClient = async () => {
     try {
-      const response = await api.get(`/api/clients/${id}`);
+      const response = await endpoints.clients.getById(id);
       const data = response.data.data || response.data;
       setClient(data);
       setFormData({
@@ -53,7 +53,7 @@ const ClientDetails = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await api.get('/api/companies');
+      const response = await endpoints.companies.getAll();
       setCompanies(response.data.data || []);
     } catch (error) {
       console.error('Error fetching companies:', error);
@@ -65,10 +65,10 @@ const ClientDetails = () => {
     try {
       setSaving(true);
       if (id === 'new') {
-        await api.post('/api/clients', formData);
+        await endpoints.clients.create(formData);
         toast.success('Success', 'Client created successfully');
       } else {
-        await api.put(`/api/clients/${id}`, formData);
+        await endpoints.clients.update(id, formData);
         toast.success('Success', 'Client updated successfully');
       }
       navigate('/clients');
