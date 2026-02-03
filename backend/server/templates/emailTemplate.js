@@ -164,7 +164,7 @@ export const EmailTemplates = {
       </ul>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${loginUrl || 'https://portal.cottson.com/client/login'}" style="background-color: ${BRAND_COLOR}; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+        <a href="${loginUrl || 'https://portal.cottson.com'}" style="background-color: ${BRAND_COLOR}; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
           Access Portal
         </a>
       </div>
@@ -222,7 +222,7 @@ export const EmailTemplates = {
       <p>Please log in and change your password immediately.</p>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${loginUrl || 'https://portal.cottson.com/login'}" style="background-color: ${BRAND_COLOR}; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+        <a href="${loginUrl || 'https://portal.cottson.com'}" style="background-color: ${BRAND_COLOR}; color: white; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
           Access Admin Portal
         </a>
       </div>

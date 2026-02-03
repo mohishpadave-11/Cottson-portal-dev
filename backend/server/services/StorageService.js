@@ -18,6 +18,8 @@ const s3Client = new S3Client({
     accessKeyId: ACCESS_KEY_ID,
     secretAccessKey: SECRET_ACCESS_KEY,
   },
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
 });
 
 export const uploadFile = async (fileBuffer, fileName, folder = "uploads", contentType) => {
@@ -29,7 +31,7 @@ export const uploadFile = async (fileBuffer, fileName, folder = "uploads", conte
       Key: uniqueFileName,
       Body: fileBuffer,
       ContentType: contentType,
-      ACL: "public-read", // Or private depending on R2 bucket settings
+
     });
 
     await s3Client.send(command);
@@ -55,7 +57,7 @@ export const generatePresignedUrl = async (fileName, fileType, folder = "uploads
       Bucket: BUCKET_NAME,
       Key: uniqueFileName,
       ContentType: fileType,
-      ACL: "public-read",
+
     });
 
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // 1 hour expiration

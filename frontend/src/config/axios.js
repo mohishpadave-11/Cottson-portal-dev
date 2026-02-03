@@ -26,7 +26,11 @@ axiosInstance.interceptors.request.use(
   (config) => {
     // Check for token in localStorage (standardized to 'token')
     const token = localStorage.getItem('token');
-    if (token) {
+
+    // Only add token for internal API calls (relative URLs or matching baseURL)
+    const isExternal = config.url?.startsWith('http') && !config.url?.startsWith(axiosInstance.defaults.baseURL);
+
+    if (token && !isExternal) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

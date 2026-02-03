@@ -41,10 +41,11 @@ class AuthService {
       let tempPassword;
       const cleanRole = role?.toLowerCase() || 'client';
 
+      const cleanName = name || '';
+      const nameParts = cleanName.trim().split(/\s+/); // Handle multiple spaces
+
       if (cleanRole === 'admin') {
         // Format: First 2 letters of FirstName + Last 2 letters of LastName + @cottson
-        const cleanName = name || '';
-        const nameParts = cleanName.trim().split(' ');
         const firstName = nameParts[0] || '';
         const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
 
@@ -61,7 +62,9 @@ class AuthService {
         password: tempPassword,
         role,
         companyId: companyId || null,
-        name,
+        companyId: companyId || null,
+        firstName: nameParts[0],
+        lastName: nameParts.slice(1).join(' ') || '',
         phoneNumber,
         status: 'active',
         isActive: true,
@@ -314,13 +317,6 @@ class AuthService {
 
     // Determine login URL based on role
     let loginUrl = 'https://portal.cottson.com';
-    if (role === 'client') {
-      loginUrl = 'https://portal.cottson.com/client/login';
-    } else if (role === 'admin') {
-      loginUrl = 'https://portal.cottson.com/admin/login';
-    } else if (role === 'superadmin') {
-      loginUrl = 'https://portal.cottson.com/superadmin/login';
-    }
 
     const subject = `Welcome to Cottson Clothing - Your Account Credentials`;
 

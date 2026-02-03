@@ -28,6 +28,8 @@ const router = express.Router();
  *                 type: string
  *               fileType:
  *                 type: string
+ *               docType:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Presigned URL generated

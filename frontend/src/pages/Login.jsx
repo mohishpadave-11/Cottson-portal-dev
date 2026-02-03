@@ -16,12 +16,14 @@ const Login = ({ role }) => {
     const getPortalName = () => {
         if (role === 'superadmin') return 'Superadmin Portal';
         if (role === 'admin') return 'Admin Portal';
+        if (role === 'client') return 'Client Portal';
         return 'Portal';
     };
 
     const getAccessText = () => {
         if (role === 'superadmin') return 'Please enter your credentials to access the superadmin portal';
         if (role === 'admin') return 'Please enter your credentials to access the admin portal';
+        if (role === 'client') return 'Please enter your credentials to access the client portal';
         return 'Please enter your credentials to access the portal';
     };
 

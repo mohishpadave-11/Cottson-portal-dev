@@ -117,7 +117,7 @@ const EmailService = {
   sendAdminWelcome: async (email, name, password) => {
     try {
       const subject = "Welcome to Cottson Admin Portal";
-      const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+      const loginUrl = 'https://portal.cottson.com';
       const html = EmailTemplates.adminWelcome(name, email, password, loginUrl);
 
       await sendEmail(email, subject, html);
